@@ -11,20 +11,14 @@
   </welcome-file-list>
   <servlet>
     <description>Does stuff on container startup</description>
-    
     <display-name>StartupServlet</display-name>
-    
     <servlet-name>StartupServlet</servlet-name>
     <servlet-class>aos.Register</servlet-class>
     <init-param>
-    	<param-name>superserver</param-name>
-    	<param-value>http://localhost:8081/listen/wserver</param-value>
+      <param-name>superserver</param-name>
+      <param-value>http://localhost:8081/listen/wserver</param-value>
     </init-param>
-    
-    
     <load-on-startup>1</load-on-startup>
-    
-    
   </servlet>
   <servlet>
     <display-name>Apache-Axis Servlet</display-name>
