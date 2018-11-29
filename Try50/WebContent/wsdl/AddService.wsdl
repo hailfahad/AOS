@@ -4,6 +4,16 @@
 Built on Apr 22, 2006 (06:55:48 PDT)-->
  <wsdl:types>
   <schema elementFormDefault="qualified" targetNamespace="http://aos" xmlns="http://www.w3.org/2001/XMLSchema">
+   <element name="myload">
+    <complexType/>
+   </element>
+   <element name="myloadResponse">
+    <complexType>
+     <sequence>
+      <element name="myloadReturn" type="xsd:double"/>
+     </sequence>
+    </complexType>
+   </element>
    <element name="add">
     <complexType/>
    </element>
@@ -16,6 +26,14 @@ Built on Apr 22, 2006 (06:55:48 PDT)-->
    </element>
   </schema>
  </wsdl:types>
+
+   <wsdl:message name="myloadRequest">
+
+      <wsdl:part element="impl:myload" name="parameters">
+
+      </wsdl:part>
+
+   </wsdl:message>
 
    <wsdl:message name="addRequest">
 
@@ -33,7 +51,27 @@ Built on Apr 22, 2006 (06:55:48 PDT)-->
 
    </wsdl:message>
 
+   <wsdl:message name="myloadResponse">
+
+      <wsdl:part element="impl:myloadResponse" name="parameters">
+
+      </wsdl:part>
+
+   </wsdl:message>
+
    <wsdl:portType name="AddService">
+
+      <wsdl:operation name="myload">
+
+         <wsdl:input message="impl:myloadRequest" name="myloadRequest">
+
+       </wsdl:input>
+
+         <wsdl:output message="impl:myloadResponse" name="myloadResponse">
+
+       </wsdl:output>
+
+      </wsdl:operation>
 
       <wsdl:operation name="add">
 
@@ -52,6 +90,24 @@ Built on Apr 22, 2006 (06:55:48 PDT)-->
    <wsdl:binding name="AddServiceSoapBinding" type="impl:AddService">
 
       <wsdlsoap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+      <wsdl:operation name="myload">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <wsdl:input name="myloadRequest">
+
+            <wsdlsoap:body use="literal"/>
+
+         </wsdl:input>
+
+         <wsdl:output name="myloadResponse">
+
+            <wsdlsoap:body use="literal"/>
+
+         </wsdl:output>
+
+      </wsdl:operation>
 
       <wsdl:operation name="add">
 

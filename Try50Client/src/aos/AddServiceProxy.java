@@ -50,5 +50,11 @@ public class AddServiceProxy implements aos.AddService {
     return addService.add();
   }
   
+  public double myload() throws java.rmi.RemoteException{
+    if (addService == null)
+      _initAddServiceProxy();
+    return addService.myload();
+  }
+  
   
 }

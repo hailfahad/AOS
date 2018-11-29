@@ -7,8 +7,8 @@
   <ns1:parameter name="dotNetSoapEncFix" value="true"/>
   <ns1:parameter name="enableNamespacePrefixOptimization" value="false"/>
   <ns1:parameter name="sendXMLDeclaration" value="true"/>
-  <ns1:parameter name="attachments.implementation" value="org.apache.axis.attachments.AttachmentsImpl"/>
   <ns1:parameter name="sendXsiTypes" value="true"/>
+  <ns1:parameter name="attachments.implementation" value="org.apache.axis.attachments.AttachmentsImpl"/>
   <ns1:requestFlow>
    <ns1:handler type="java:org.apache.axis.handlers.JWSHandler">
     <ns1:parameter name="scope" value="session"/>
@@ -33,8 +33,9 @@
   <ns1:parameter name="className" value="org.apache.axis.Version"/>
  </ns1:service>
  <ns1:service name="AddService" provider="java:RPC" style="wrapped" use="literal">
-  <ns2:operation name="add" qname="ns1:add" returnQName="ns1:addReturn" returnType="xsd:int" soapAction="" xmlns:ns1="http://aos" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://xml.apache.org/axis/wsdd/"/>
-  <ns1:parameter name="allowedMethods" value="add"/>
+  <ns2:operation name="myload" qname="ns1:myload" returnQName="ns1:myloadReturn" returnType="xsd:double" soapAction="" xmlns:ns1="http://aos" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://xml.apache.org/axis/wsdd/"/>
+  <ns1:operation name="add" qname="ns2:add" returnQName="ns2:addReturn" returnType="xsd:int" soapAction="" xmlns:ns2="http://aos" xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>
+  <ns1:parameter name="allowedMethods" value="add myload"/>
   <ns1:parameter name="typeMappingVersion" value="1.2"/>
   <ns1:parameter name="wsdlPortType" value="AddService"/>
   <ns1:parameter name="className" value="aos.AddService"/>
@@ -42,19 +43,6 @@
   <ns1:parameter name="schemaQualified" value="http://aos"/>
   <ns1:parameter name="wsdlTargetNamespace" value="http://aos"/>
   <ns1:parameter name="wsdlServiceElement" value="AddServiceService"/>
- </ns1:service>
- <ns1:service name="AnimalTypeService" provider="java:RPC" style="wrapped" use="literal">
-  <ns1:operation name="animalType" qname="ns2:animalType" returnQName="ns2:animalTypeReturn" returnType="xsd:string" soapAction="" xmlns:ns2="http://jee.javapapers.com" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-   <ns1:parameter qname="ns2:animal" type="xsd:string"/>
-  </ns1:operation>
-  <ns1:parameter name="allowedMethods" value="animalType"/>
-  <ns1:parameter name="wsdlPortType" value="AnimalTypeService"/>
-  <ns1:parameter name="typeMappingVersion" value="1.2"/>
-  <ns1:parameter name="schemaQualified" value="http://jee.javapapers.com"/>
-  <ns1:parameter name="wsdlServicePort" value="AnimalTypeService"/>
-  <ns1:parameter name="className" value="com.javapapers.jee.AnimalTypeService"/>
-  <ns1:parameter name="wsdlTargetNamespace" value="http://jee.javapapers.com"/>
-  <ns1:parameter name="wsdlServiceElement" value="AnimalTypeServiceService"/>
  </ns1:service>
  <ns1:transport name="http">
   <ns1:requestFlow>

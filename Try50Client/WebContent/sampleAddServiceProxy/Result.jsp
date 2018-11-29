@@ -69,6 +69,14 @@ case 13:
         <%= tempResultreturnp14 %>
         <%
 break;
+case 16:
+        gotMethod = true;
+        double myload16mtemp = sampleAddServiceProxyid.myload();
+        String tempResultreturnp17 = org.eclipse.jst.ws.util.JspUtils.markup(String.valueOf(myload16mtemp));
+        %>
+        <%= tempResultreturnp17 %>
+        <%
+break;
 }
 } catch (Exception e) { 
 %>

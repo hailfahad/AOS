@@ -8,5 +8,6 @@
 package aos;
 
 public interface AddService extends java.rmi.Remote {
+    public double myload() throws java.rmi.RemoteException;
     public int add() throws java.rmi.RemoteException;
 }

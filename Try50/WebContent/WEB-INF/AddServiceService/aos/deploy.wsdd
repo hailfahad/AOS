@@ -10,9 +10,11 @@
       <parameter name="className" value="aos.AddService"/>
       <parameter name="wsdlPortType" value="AddService"/>
       <parameter name="typeMappingVersion" value="1.2"/>
+      <operation xmlns:operNS="http://aos" xmlns:retNS="http://aos" xmlns:rtns="http://www.w3.org/2001/XMLSchema" name="myload" qname="operNS:myload" returnQName="retNS:myloadReturn" returnType="rtns:double" soapAction="">
+      </operation>
       <operation xmlns:operNS="http://aos" xmlns:retNS="http://aos" xmlns:rtns="http://www.w3.org/2001/XMLSchema" name="add" qname="operNS:add" returnQName="retNS:addReturn" returnType="rtns:int" soapAction="">
       </operation>
-      <parameter name="allowedMethods" value="add"/>
+      <parameter name="allowedMethods" value="add myload"/>
 
   </service>
 </deployment>
