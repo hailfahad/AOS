@@ -14,6 +14,10 @@
   <servlet>
       <servlet-name>ServerServlet</servlet-name>
       <servlet-class>aos.ServerListener</servlet-class>
+      <init-param>
+	      <param-name>registryfile</param-name>
+	      <param-value>/wsdl_register</param-value>
+      </init-param>
    </servlet>
  
    <servlet-mapping>

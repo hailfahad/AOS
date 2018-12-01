@@ -1,8 +1,14 @@
 package aos.listeners;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -17,7 +23,10 @@ import aos.common.WSDLContainer;
 @WebServlet("/ServerListener")
 public class ServerListener extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
+    
+	private String wsdl_register;
+	private WSDLContainer wsdlConObjLocal=null;
+	
     /**
      * @see HttpServlet#HttpServlet()
      */
@@ -38,13 +47,8 @@ public class ServerListener extends HttpServlet {
 		
 		String server_wsdl_url=request.getParameter("WSDL");
 		
-		HashMap <String, Integer> globalMap = WSDLContainer.getInstance();
+		this.wsdlConObjLocal.add(server_wsdl_url, 0);
 		
-		if(globalMap.containsKey(server_wsdl_url)) {
-			WSDLContainer.getInstance().put(server_wsdl_url, globalMap.get(server_wsdl_url));
-		}else {
-			WSDLContainer.getInstance().put(server_wsdl_url,0);
-		}
 		//Save this somewhere and persist it somewhere
 		response.getWriter().write("SUCCESS");
 		
@@ -56,5 +60,47 @@ public class ServerListener extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		doGet(request, response);
 	}
+	
+
+	@Override
+	public void destroy() {
+	// TODO Auto-generated method stub
+		
+		// write object to file
+		FileOutputStream fos;
+		try {
+			fos = new FileOutputStream(this.wsdl_register);
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(this.wsdlConObjLocal);
+			oos.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	
+	}
+	
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+		this.wsdl_register=config.getInitParameter("registryfile");
+		//Load the object 
+		FileInputStream fis;
+		try {
+			fis = new FileInputStream(this.wsdl_register);
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			this.wsdlConObjLocal = (WSDLContainer) ois.readObject();
+			ois.close();
+		} catch (IOException | ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			this.wsdlConObjLocal = WSDLContainer.getInstance();
+			e.printStackTrace();
+		}
+	
+		
+	}
+
+	
+	
 
 }
