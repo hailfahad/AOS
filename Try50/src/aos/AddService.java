@@ -1,7 +1,5 @@
 package aos;
 
-import org.apache.tomcat.jni.Time;
-
 public class AddService implements AddInterface{
 	//Should add code for performance logging perspective from WS server perspective
 	
@@ -23,6 +21,8 @@ public class AddService implements AddInterface{
 	}
 
 	public double myload() {
-		return MyTaskQueue.getInstance().getSize()+Math.random();
+		return Math.random();
 	}
+	
+	
 }
