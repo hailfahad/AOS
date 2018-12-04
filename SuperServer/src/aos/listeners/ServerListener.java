@@ -25,14 +25,16 @@ public class ServerListener extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     
 	private String wsdl_register;
-	private WSDLContainer wsdlConObjLocal=null;
+	public static WSDLContainer wsdlConObjLocal=null;
 	
     /**
      * @see HttpServlet#HttpServlet()
+     * 
      */
     public ServerListener() {
         super();
-        // TODO Auto-generated constructor stub
+        // TODO Auto-generated constructor stub       
+        this.wsdlConObjLocal = new WSDLContainer();
     }
 
 	/**
