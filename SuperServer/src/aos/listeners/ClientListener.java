@@ -21,8 +21,10 @@ public class ClientListener extends HttpServlet {
 		int input = (int) request.getAttribute("input");
 		
 		//  Creation of a thread to find the lowest load of and process the operation and return the message to the client
-		LoadBalancer loadBalance = new LoadBalancer(input);
+		LoadBalancer loadBalance = new LoadBalancer(input,"add");
+		// Generates 1 thread to send a request to servers with the lowest loads
 		new Thread(loadBalance).start();
+		
 		
 	
 	}
