@@ -1,5 +1,7 @@
 package aos;
 
+import java.util.Random;
+
 public class AddService implements AddInterface{
 	//Should add code for performance logging perspective from WS server perspective
 	
@@ -17,7 +19,10 @@ public class AddService implements AddInterface{
 		MyTaskQueue.getInstance().removeTask();
 		//Should add some code for random exits as well
 		
-		return (int) Math.pow(Math.random(),2);
+		
+		int retVal=(int) Math.pow(new Random().nextInt(),2);
+		System.out.println("This is the val being returned "+retVal);
+		return retVal;
 	}
 
 	public double myload() {

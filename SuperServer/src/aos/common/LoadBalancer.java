@@ -1,7 +1,11 @@
 package aos.common;
 import org.w3c.dom.Element;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -31,6 +35,9 @@ public class LoadBalancer implements Runnable{
 	int Result;
 	String Operation;
 	private AsyncContext asyncContext;
+	
+	private String myloadmessage="<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\"><Body><myload xmlns=\"http://aos\"/></Body></Envelope>";
+	private String addmessage="<Envelope xmlns=\\\"http://schemas.xmlsoap.org/soap/envelope/\\\"><Body><add xmlns=\\\"http://aos\\\"/></Body></Envelope>";
 	
 	// Method to process a raq request from a client
 	// Takes in an integer and then find the server with the lowest load to process
@@ -78,6 +85,44 @@ public class LoadBalancer implements Runnable{
 		
 		return url;
 	}
+	
+	
+	private String communicateWS(String urlStr,String message,String action) {
+		StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
+		URL url;
+		try {
+			url = new URL(urlStr);
+			HttpURLConnection con=(HttpURLConnection)url.openConnection();
+			
+			con.setRequestMethod("POST");
+			con.setRequestProperty("Content-Type", "text/xml; charset=UTF-8");
+			con.setRequestProperty("SOAPAction", action);
+			con.setDoOutput(true);
+			
+			DataOutputStream wr = new DataOutputStream (
+			        con.getOutputStream());
+			    wr.writeBytes(message);
+			    wr.close();
+			    //Get Response  
+			InputStream is = con.getInputStream();
+			    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+			    
+			    String line;
+			    while ((line = rd.readLine()) != null) {
+			      response.append(line);
+			      response.append('\r');
+			    }
+			    rd.close();
+			    System.out.println("OUTPUT "+response.toString());
+				con.disconnect();
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		return response.toString();
+	
+	}
 	/**
 	 * Iterates over a list of servers with a given operation
 	 * @return
@@ -98,12 +143,14 @@ public class LoadBalancer implements Runnable{
 					String url = this.returnIP(key);
 					// https://www.baeldung.com/java-http-request
 					
-					
-					URL connection = new URL(url+"/myLoad");
-					HttpURLConnection con = (HttpURLConnection) connection.openConnection();
-					con.setRequestMethod("GET");
+					String res=communicateWS( url+"/myLoad",this.myloadmessage,"myload");
+							
+					//URL connection = new URL(url+"/myLoad");
+					//HttpURLConnection con = (HttpURLConnection) connection.openConnection();
+					//con.setRequestMethod("GET");
 	
-					int response = Integer.parseInt(con.getResponseMessage());
+					//int response = Integer.parseInt(con.getResponseMessage());
+					int response = Integer.parseInt(res);
 					currentLoads.put(url, response);
 					
 					// This allows for multiple servers to have the same load and to recieve the request
@@ -147,9 +194,24 @@ public class LoadBalancer implements Runnable{
 			try {
 				for (String server : lowestServer) {
 					String serverAddress = returnIP(server);
-					URL connection = new URL(serverAddress+"/add");
-					HttpURLConnection con = (HttpURLConnection) connection.openConnection();
-					con.setRequestMethod("GET");
+					
+					String res=communicateWS( serverAddress+"/add",this.addmessage,"add");
+					//URL connection = new URL(serverAddress+"/add");
+					//HttpURLConnection con = (HttpURLConnection) connection.openConnection();
+					//con.setRequestMethod("GET");
+					PrintWriter out;
+					try {
+						ServletResponse response = this.asyncContext.getResponse();
+				        response.setContentType("text/plain");
+						out = response.getWriter();
+						out.println("SUCCESS: " + res);
+						out.flush();
+						out.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
 					//TODO:  MAKE A HTTP REQUEST FOR add
 				}
 			} catch (MalformedURLException e) {
@@ -168,18 +230,6 @@ public class LoadBalancer implements Runnable{
 			// Make a call to the lowest server with the starting value
 			// TODO: how do you make SOAP calls given the URL?
 			// Set the result to what the server returns
-		}
-		PrintWriter out;
-		try {
-			ServletResponse response = this.asyncContext.getResponse();
-	        response.setContentType("text/plain");
-			out = response.getWriter();
-			out.println("SUCCESS: " + 5);
-			out.flush();
-			out.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	   
 	}

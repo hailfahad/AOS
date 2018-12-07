@@ -20,7 +20,7 @@ import aos.common.WSDLContainer;
 /**
  * Servlet implementation class ServerListener
  */
-@WebServlet("/ServerListener")
+
 public class ServerListener extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     
@@ -34,7 +34,7 @@ public class ServerListener extends HttpServlet {
     public ServerListener() {
         super();
         // TODO Auto-generated constructor stub       
-        this.wsdlConObjLocal = new WSDLContainer();
+        //this.wsdlConObjLocal = new WSDLContainer();
     }
 
 	/**
@@ -86,6 +86,7 @@ public class ServerListener extends HttpServlet {
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		this.wsdl_register=config.getInitParameter("registryfile");
+		System.out.println("got the path to wsdl file "+this.wsdl_register);
 		//Load the object 
 		FileInputStream fis;
 		try {
@@ -94,9 +95,8 @@ public class ServerListener extends HttpServlet {
 			this.wsdlConObjLocal = (WSDLContainer) ois.readObject();
 			ois.close();
 		} catch (IOException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			this.wsdlConObjLocal = WSDLContainer.getInstance();
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	
 		

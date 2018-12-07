@@ -13,11 +13,12 @@
   
   <servlet>
       <servlet-name>ServerServlet</servlet-name>
-      <servlet-class>aos.ServerListener</servlet-class>
+      <servlet-class>aos.listeners.ServerListener</servlet-class>
       <init-param>
 	      <param-name>registryfile</param-name>
 	      <param-value>/wsdl_register</param-value>
       </init-param>
+      <load-on-startup>1</load-on-startup>
    </servlet>
  
    <servlet-mapping>
@@ -26,15 +27,16 @@
    </servlet-mapping>
    
    
-   <servlet>
+   <!-- <servlet>
       <servlet-name>ClientServlet</servlet-name>
-      <servlet-class>aos.ClientListener</servlet-class>
+      <servlet-class>aos.listeners.ClientListener</servlet-class>
+      <load-on-startup>1</load-on-startup>
    </servlet>
  
    <servlet-mapping>
       <servlet-name>ClientServlet</servlet-name>
       <url-pattern>/ClientListener</url-pattern>
-   </servlet-mapping>
+   </servlet-mapping> -->
    
    
 </web-app>

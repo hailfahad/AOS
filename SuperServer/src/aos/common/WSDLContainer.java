@@ -14,7 +14,7 @@ public class WSDLContainer implements Serializable{
 	private static WSDLContainer wsdlContainerObj=null;
 	
 	// Constructor for a new WSDLContainer
-	public WSDLContainer() {
+	private WSDLContainer() {
 		if(wsdl_table == null) {
 			wsdl_table=new HashMap();	
 		}
