@@ -16,7 +16,7 @@
     <servlet-class>aos.Register</servlet-class>
     <init-param>
       <param-name>superserver</param-name>
-      <param-value>http://127.0.0.1:8081/SuperServer/ServerListener</param-value>
+      <param-value>127.0.0.1:8080,http://127.0.0.1:8081/SuperServer/ServerListener</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>

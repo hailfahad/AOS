@@ -52,7 +52,7 @@ public class LoadBalancer implements Runnable{
 
 	private Pattern loadpattern = Pattern.compile("<myloadReturn xsi:type=\"xsd:int\">(.+?)</myloadReturn>", Pattern.DOTALL);
 
-	private ArrayList<String> LoadBalancerRecords;// Format of this string is LOADBALANCER | Message Type | Timestamp | Message 
+	private ArrayList<String> LoadBalancerRecords;// Format of this string is SERVER | Message Type | Timestamp | Message 
 
 	// Method to process a raq request from a client
 	// Takes in an integer and then find the server with the lowest load to process
@@ -232,7 +232,7 @@ public class LoadBalancer implements Runnable{
 				for (String server : lowestServer) {
 					String serverAddress = returnIP(server);
 
-					new Thread(new ExecuteWSThread(serverAddress,this.addmessage,this.asyncContext,"add")).start();
+					new Thread(new ExecuteWSThread(serverAddress,this.addmessage,"add")).start();
 
 				}
 			} catch (MalformedURLException e) {
@@ -296,7 +296,7 @@ public class LoadBalancer implements Runnable{
 								con.setRequestMethod("GET");
 
 								//Sends the message to the SS
-								new Thread(new ExecuteWSThread(url_ss,this.addmessage,this.asyncContext,"add")).start();
+								new Thread(new ExecuteWSThread(url_ss,this.addmessage,"add")).start();
 
 								InputStream isi = con.getInputStream();
 								InputStreamReader isr = new InputStreamReader(isi);
