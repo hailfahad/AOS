@@ -53,8 +53,8 @@ public class Register implements javax.servlet.Servlet {
 		System.out.println("Will i fail now also ");
 		String urlWSDL="http://127.0.0.1:8080/"+config.getServletContext().getServletContextName()+"/services/AddService?wsdl";
 		
-		//String loc_superserver=config.getInitParameter("superserver");
-		String loc_superserver="http://127.0.0.1:8081/SuperServer/ServerListener";	
+		String loc_superserver=config.getInitParameter("superserver");
+		//String loc_superserver="http://127.0.0.1:8081/SuperServer/ServerListener";	
 		System.out.println("------- What is the url hit before---------- "+loc_superserver);
 		
 		loc_superserver+="?WSDL="+urlWSDL;
