@@ -56,13 +56,14 @@ public class ClientListener extends HttpServlet {
 			//Only spawn WS threads
 			//  Creation of a thread to find the lowest load of and process the operation and return the message to the client
 			
-			 final AsyncContext asyncContext = request.startAsync(request, response);
-			 
-			 //Call for all WSDLs to call the WS nodes directly
-			 
-			LoadBalancer loadBalance = new LoadBalancer(1,"add",asyncContext);
-			// Generates 1 thread to send a request to servers with the lowest loads
-			new Thread(loadBalance).start();
+			AsyncContext asyncCtx = request.startAsync();
+			
+			asyncCtx.addListener(new AppAsyncListener());
+			asyncCtx.setTimeout(5*60*1000);
+			
+			//ThreadPoolExecutor executor = (ThreadPoolExecutor) request.getServletContext().getAttribute("executor");
+			//System.out.println("This is the executor valu"+executor);
+			new AsyncRequestProcessor(asyncCtx, 5*60*1000).run();
 		
 		}
 		
