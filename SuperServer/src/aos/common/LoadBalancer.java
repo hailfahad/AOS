@@ -103,7 +103,7 @@ public class LoadBalancer implements Runnable{
 			con.setRequestProperty("Content-Type", "text/xml; charset=UTF-8");
 			con.setRequestProperty("SOAPAction", action);
 			con.setDoOutput(true);
-			
+			con.setConnectTimeout(2*60*1000);
 			DataOutputStream wr = new DataOutputStream (
 			        con.getOutputStream());
 			    wr.writeBytes(message);
@@ -209,8 +209,8 @@ public class LoadBalancer implements Runnable{
 			try {
 				for (String server : lowestServer) {
 					String serverAddress = returnIP(server);
-					
-					new Thread(new ExecuteWSThread(serverAddress,this.addmessage,this.asyncContext,"add")).start();
+					//AsyncContext asyncContextObj = this.asyncContext.getRequest().startAsync();
+					//new Thread(new ExecuteWSThread(serverAddress,this.addmessage,this.asyncContext,"add")).start();
 				
 				}
 			} catch (MalformedURLException e) {

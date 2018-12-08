@@ -82,7 +82,7 @@ public class StarterClass {
 					url= new URL(url_ss);
 					con=(HttpURLConnection)url.openConnection();
 					con.setRequestMethod("GET");
-					
+					con.setConnectTimeout(5*60*1000);
 					InputStream isi = con.getInputStream();
 		            InputStreamReader isr = new InputStreamReader(isi);
 		            BufferedReader in = new BufferedReader(isr);

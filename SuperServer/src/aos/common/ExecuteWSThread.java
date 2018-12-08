@@ -19,15 +19,16 @@ public class ExecuteWSThread implements Runnable{
 
 	private String serverAddress;
 	private String message;
-	private AsyncContext asyncContext;
+	//private AsyncContext asyncContext;
 	private String action;
 	private Pattern addpattern = Pattern.compile("<addReturn>(.+?)</addReturn>", Pattern.DOTALL);
 
+	private String ws_response=null; 
 	
-	public ExecuteWSThread(String serverAddress, String message, AsyncContext asyncContext,String action) {
+	public ExecuteWSThread(String serverAddress, String message, String action) {
 		this.serverAddress=serverAddress;
 		this.message=message;
-		this.asyncContext=asyncContext;
+		//this.asyncContext=asyncContext;
 		this.action=action;
 				
 	}
@@ -77,11 +78,15 @@ public class ExecuteWSThread implements Runnable{
 		Matcher matcher = this.addpattern.matcher(res);
 		matcher.find();
 		
+		this.ws_response=matcher.group(1);
 		//URL connection = new URL(serverAddress+"/add");
 		//HttpURLConnection con = (HttpURLConnection) connection.openConnection();
 		//con.setRequestMethod("GET");
-		PrintWriter out;
+		/*PrintWriter out;
 		try {
+			//if(this.asyncContext.)
+			
+			
 			ServletResponse response = this.asyncContext.getResponse();
 	        response.setContentType("text/plain");
 			out = response.getWriter();
@@ -89,9 +94,9 @@ public class ExecuteWSThread implements Runnable{
 			out.flush();
 			out.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			System.out.println("Its cool -- the AsynContext is allowing for checks.");
 			e.printStackTrace();
-		}
+		}*/
 		
 	}
 
