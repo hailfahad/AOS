@@ -12,7 +12,9 @@ public class AddService implements AddInterface{
 		//Leave it as is for now
 		
 		try {
-			Thread.sleep((long) (Math.random()*1000));
+			System.out.println("I am gonna sleep for a long time ");
+			Thread.sleep((long) (Math.random()*100000));
+			System.out.println("Now i am awake ");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -25,8 +27,10 @@ public class AddService implements AddInterface{
 		return retVal;
 	}
 
-	public double myload() {
-		return Math.random();
+	public int myload() {
+		int retVal=new Random().nextInt();
+		System.out.println("Im in WS ... return my load "+retVal);
+		return retVal;
 	}
 	
 	

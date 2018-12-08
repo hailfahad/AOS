@@ -66,8 +66,6 @@ public class ServerListener extends HttpServlet {
 
 	@Override
 	public void destroy() {
-	// TODO Auto-generated method stub
-		
 		// write object to file
 		FileOutputStream fos;
 		try {
@@ -76,7 +74,6 @@ public class ServerListener extends HttpServlet {
 			oos.writeObject(this.wsdlConObjLocal);
 			oos.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -101,8 +98,4 @@ public class ServerListener extends HttpServlet {
 	
 		
 	}
-
-	
-	
-
 }

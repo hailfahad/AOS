@@ -24,14 +24,15 @@ public class ClientListener extends HttpServlet {
 		// Value that the client wants a number to be added to
 		String client_code=request.getParameter("client");
 		
+		System.out.println("Got the client code "+client_code);
 		
 		if(client_code.equals("1")) {
 			//Request from client ..must spawn WS threads and SS threads
-			final AsyncContext asyncContext = request.startAsync(request, response);
-			 
+			AsyncContext asyncContext = request.startAsync(request, response);
 			 //Call for all WSDLs to call the WS nodes directly
-			 
+	
 			LoadBalancer loadBalance = new LoadBalancer(1,"add",asyncContext);
+			System.out.println("Spawning a LoadBalancer ");
 			// Generates 1 thread to send a request to servers with the lowest loads
 			new Thread(loadBalance).start();
 			

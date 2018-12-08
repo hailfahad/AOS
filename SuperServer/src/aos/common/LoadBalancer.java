@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletResponse;
@@ -37,7 +39,10 @@ public class LoadBalancer implements Runnable{
 	private AsyncContext asyncContext;
 	
 	private String myloadmessage="<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\"><Body><myload xmlns=\"http://aos\"/></Body></Envelope>";
-	private String addmessage="<Envelope xmlns=\\\"http://schemas.xmlsoap.org/soap/envelope/\\\"><Body><add xmlns=\\\"http://aos\\\"/></Body></Envelope>";
+	private String addmessage="<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\"><Body><add xmlns=\"http://aos\"/></Body></Envelope>";
+	
+	private Pattern loadpattern = Pattern.compile("<myloadReturn xsi:type=\"xsd:int\">(.+?)</myloadReturn>", Pattern.DOTALL);
+	
 	
 	// Method to process a raq request from a client
 	// Takes in an integer and then find the server with the lowest load to process
@@ -143,17 +148,27 @@ public class LoadBalancer implements Runnable{
 					String url = this.returnIP(key);
 					// https://www.baeldung.com/java-http-request
 					
-					String res=communicateWS( url+"/myLoad",this.myloadmessage,"myload");
+					System.out.println("This is the load url to hit "+url);
+					String res=communicateWS( url,this.myloadmessage,"myload");
 							
 					//URL connection = new URL(url+"/myLoad");
 					//HttpURLConnection con = (HttpURLConnection) connection.openConnection();
 					//con.setRequestMethod("GET");
-	
+					
+					//Parse and figure the actual val returned
+					Matcher matcher = loadpattern.matcher(res);
+					matcher.find();
+					//System.out.println();
+					
 					//int response = Integer.parseInt(con.getResponseMessage());
-					int response = Integer.parseInt(res);
+					int response = Integer.parseInt(matcher.group(1));
+					System.out.println("What did i get for my load "+response);
+					
 					currentLoads.put(url, response);
 					
 					// This allows for multiple servers to have the same load and to recieve the request
+					
+					//Write a logic to return more than 1 WS servers in the list
 					if (response == min) {
 						toReturn.add(key);
 					}
@@ -195,24 +210,8 @@ public class LoadBalancer implements Runnable{
 				for (String server : lowestServer) {
 					String serverAddress = returnIP(server);
 					
-					String res=communicateWS( serverAddress+"/add",this.addmessage,"add");
-					//URL connection = new URL(serverAddress+"/add");
-					//HttpURLConnection con = (HttpURLConnection) connection.openConnection();
-					//con.setRequestMethod("GET");
-					PrintWriter out;
-					try {
-						ServletResponse response = this.asyncContext.getResponse();
-				        response.setContentType("text/plain");
-						out = response.getWriter();
-						out.println("SUCCESS: " + res);
-						out.flush();
-						out.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					//TODO:  MAKE A HTTP REQUEST FOR add
+					new Thread(new ExecuteWSThread(serverAddress,this.addmessage,this.asyncContext,"add")).start();
+				
 				}
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
