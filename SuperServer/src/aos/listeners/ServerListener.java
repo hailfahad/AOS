@@ -48,16 +48,12 @@ public class ServerListener extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-		
-		System.out.println("I get an incoming request from server -- need to extract the WSDL and save it");
-		
-		response.setContentType("text/html;charset=UTF-8");
-		
 		this.ServerRecords.add("SERVER | Recieved from Server | " + (new Timestamp(System.currentTimeMillis())) +" | " + response);
 		
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+		System.out.println("I get an incoming request from server -- need to extract the WSDL and save it");
+		response.setContentType("text/html;charset=UTF-8");
 		String server_wsdl_url=request.getParameter("WSDL");
-		
 		this.wsdlConObjLocal.add(server_wsdl_url, 0);
 		
 		//Save this somewhere and persist it somewhere

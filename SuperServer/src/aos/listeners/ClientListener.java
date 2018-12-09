@@ -33,6 +33,8 @@ public class ClientListener extends HttpServlet {
 		System.out.println("Client has called me with a request -- Fork a thread which will go through the WSDLs, "
 				+ "call myload and figure out who to send the req and wait for response and then send the response back to client.");
 
+		long startTime=System.currentTimeMillis();
+		
 		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
 		// Value that the client wants a number to be added to
 		String client_code=request.getParameter("client");
@@ -52,8 +54,9 @@ public class ClientListener extends HttpServlet {
 			System.out.println("Spawning a LoadBalancer ");
 			this.ClientRecords.add("SERVER | Sending to WS (1) | " + (new Timestamp(System.currentTimeMillis())) +" | " + client_code );
 			this.ClientRecords.add("SERVER | Sending to SS (0) | " + (new Timestamp(System.currentTimeMillis())) +" | " + client_code );
-			new AsyncRequestProcessor(asyncCtx, 5*60*1000).run();
-
+			new AsyncRequestProcessor(asyncCtx, 5*60*1000,1).run();
+			
+			
 
 		}else {
 			//Only spawn WS threads
@@ -62,11 +65,11 @@ public class ClientListener extends HttpServlet {
 			asyncCtx.addListener(new AppAsyncListener());
 			asyncCtx.setTimeout(5*60*1000);
 			this.ClientRecords.add("SERVER | Sending to WS (0) | " + (new Timestamp(System.currentTimeMillis())) +" | " + client_code );
-			new AsyncRequestProcessor(asyncCtx, 5*60*1000).run();
+			new AsyncRequestProcessor(asyncCtx, 5*60*1000,0).run();
 
 		}
 
-
+		System.out.println("ClientListener, reqHASH,"+(System.currentTimeMillis()-startTime));
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -94,8 +97,6 @@ public class ClientListener extends HttpServlet {
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {
-
-
 
 	}
 	

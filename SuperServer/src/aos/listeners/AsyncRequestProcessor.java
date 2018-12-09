@@ -56,30 +56,33 @@ public class AsyncRequestProcessor implements Runnable {
 	private Pattern loadpattern = Pattern.compile("<myloadReturn xsi:type=\"xsd:int\">(.+?)</myloadReturn>", Pattern.DOTALL);
 	private Pattern addpattern = Pattern.compile("<addReturn>(.+?)</addReturn>", Pattern.DOTALL);
 
-	private String ws_response=null; 
+	private LinkedList<String> ws_response=new LinkedList(); 
 	private boolean responseFlag=false;
 
 	private String myURL = "";
 	private int serverRequestType = 0;  // 1 = send message to WS and SS | 0 is only send to SS
 
-	public AsyncRequestProcessor() {
-		// https://stackoverflow.com/questions/9481865/getting-the-ip-address-of-the-current-machine-using-java
-		try(final DatagramSocket socket = new DatagramSocket())
-		{
-			socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
-			this.myURL = socket.getLocalAddress().getHostAddress();
-		} catch (UnknownHostException e) {
-			System.out.println("There is something wrong with my configuration");
-			e.printStackTrace();
-		} catch (SocketException e1) {
-			System.out.println("could not create a new datagram socket");
-			e1.printStackTrace();
-		}
-	}
+	
 
-	public AsyncRequestProcessor(AsyncContext asyncCtx, int secs) {
+	public AsyncRequestProcessor(AsyncContext asyncCtx, int secs, int serverRequestType) {
 		this.asyncContext = asyncCtx;
 		this.secs = secs;
+		this.serverRequestType=serverRequestType;
+		
+		// https://stackoverflow.com/questions/9481865/getting-the-ip-address-of-the-current-machine-using-java
+				try(final DatagramSocket socket = new DatagramSocket())
+				{
+					socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+					this.myURL = socket.getLocalAddress().getHostAddress();
+					System.out.println("What is my URL in the constructor "+this.myURL);
+					
+				} catch (UnknownHostException e) {
+					System.out.println("There is something wrong with my configuration");
+					e.printStackTrace();
+				} catch (SocketException e1) {
+					System.out.println("could not create a new datagram socket");
+					e1.printStackTrace();
+				}
 	}
 
 	public String returnIP(String wsdl) throws ParserConfigurationException, MalformedURLException, SAXException, IOException {
@@ -228,7 +231,7 @@ public class AsyncRequestProcessor implements Runnable {
 
 	@Override
 	public void run() {
-
+		long startTime= System.currentTimeMillis();
 		//In this one needs to spawn new threads 
 
 		System.out.println("Async Supported? "
@@ -245,9 +248,6 @@ public class AsyncRequestProcessor implements Runnable {
 					//AsyncContext asyncContextObj = this.asyncContext.getRequest().startAsync();
 
 					//This part needs to be handled -- Spawn a new thread and then capture the first response only
-
-
-
 					//Thread t= new Thread(new ExecuteWSThread(serverAddress,this.addmessage,"add"));
 					//t.start();
 
@@ -256,7 +256,7 @@ public class AsyncRequestProcessor implements Runnable {
 						public void run() {
 							//4
 							//do your logic here in thread#2
-
+							
 							StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
 							URL url;
 							try {
@@ -295,13 +295,101 @@ public class AsyncRequestProcessor implements Runnable {
 							Matcher matcher = addpattern.matcher(res);
 							matcher.find();
 
-							ws_response=matcher.group(1);
+							ws_response.add(matcher.group(1));
 
 							//then release the lock
 							//5
 							latch.countDown();
+							
 						}
 					}).start();
+					
+					//I would need to spawn threads for Calling the other SS and then wait for the first guy
+					
+					// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
+					if(this.serverRequestType == 1) {
+
+						// TODO: create the list of SS change location of 
+						// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
+						
+						//This should come from web.xml -- 
+						String superserver_list="E:\\git\\AOS\\Try50\\SuperServerList.txt";
+						LinkedList<String> superserver_locs=null;
+
+						try {
+							File file = new File(superserver_list);
+							FileReader fileReader = new FileReader(file);
+							BufferedReader bufferedReader = new BufferedReader(fileReader);
+							StringBuffer stringBuffer = new StringBuffer();
+							String line;
+							superserver_locs=new LinkedList<String>();
+
+							while ((line = bufferedReader.readLine()) != null) {
+								
+								//Check and dont add the SS which is the same as self
+								superserver_locs.add(line);
+							}
+							fileReader.close();
+
+							System.out.println("Contents of file:"+superserver_locs);
+
+							//Got the list of all superserver.. Iterate and call them -- then implement more complicated logic
+							if(superserver_locs!=null && superserver_locs.size()>0) {
+								URL url_SS=null;
+								HttpURLConnection con_SS=null;
+								for (int i=0;i<superserver_locs.size();i++) {
+									//Iterating each of the superservers now
+									try {
+										String url_ss=superserver_locs.get(i);
+
+										if(!url_ss.contains(this.myURL)) {
+											url_ss+="?client=1";
+
+											//System.out.println("Using the url "+url_ss);
+											//Spawn new threads to execute the shoot requests to the 
+											
+											url_SS= new URL(url_ss);
+											con_SS=(HttpURLConnection)url_SS.openConnection();
+											con_SS.setRequestMethod("GET");
+
+											//Sends the message to the SS -- 
+											new Thread(new ExecuteWSThread(url_ss,this.addmessage,"add")).start();
+
+											InputStream isi = con_SS.getInputStream();
+											InputStreamReader isr = new InputStreamReader(isi);
+											BufferedReader in = new BufferedReader(isr);
+											String str;
+											StringBuilder sb = new StringBuilder();
+
+
+											while((str = in.readLine()) != null){
+												sb.append(str);
+												sb.append("\n");
+											}
+											//content.append(inputLine);
+											in.close();
+											isr.close();
+											isi.close();
+											con_SS.disconnect();
+
+											System.out.println("I got response from SS:"+sb.toString());
+										}
+									} catch (MalformedURLException e) {
+										e.printStackTrace();
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+
+								}
+							}
+							
+						} catch (Exception e) {
+							// TODO: handle exception
+							System.out.println("Superserver list for client is an issue");
+							System.exit(0);
+						}
+
+					}					
 
 					try {
 						//3 this method will block the thread of latch untill its released later from thread#2
@@ -311,7 +399,13 @@ public class AsyncRequestProcessor implements Runnable {
 					}
 
 				}
-
+				
+				//Waiting for more than half guys to respond and take a consensus and send that response back.
+				
+				
+			
+				
+				
 				System.out.println("My thread has completed and hence, I reach here. -- Maybe I reach here on first thread completion "+ws_response);
 				if(!this.responseFlag) {
 					//It is false... first timer.. send response
@@ -343,83 +437,7 @@ public class AsyncRequestProcessor implements Runnable {
 				e.printStackTrace();
 			}
 
-			// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
-			if(this.serverRequestType == 0) {
 
-				// TODO: create the list of SS change location of 
-				// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
-				String superserver_list="E:\\git\\AOS\\Try50\\SuperServerList.txt";
-				LinkedList<String> superserver_locs=null;
-
-				try {
-					File file = new File(superserver_list);
-					FileReader fileReader = new FileReader(file);
-					BufferedReader bufferedReader = new BufferedReader(fileReader);
-					StringBuffer stringBuffer = new StringBuffer();
-					String line;
-					superserver_locs=new LinkedList<String>();
-
-					while ((line = bufferedReader.readLine()) != null) {
-						superserver_locs.add(line);
-					}
-					fileReader.close();
-
-					System.out.println("Contents of file:"+superserver_locs);
-
-				} catch (Exception e) {
-					// TODO: handle exception
-					System.out.println("Superserver list for client is an issue");
-					System.exit(0);
-				}
-
-				//Got the list of all superserver.. Iterate and call them -- then implement more complicated logic
-				if(superserver_locs!=null && superserver_locs.size()>0) {
-					URL url=null;
-					HttpURLConnection con=null;
-					for (int i=0;i<superserver_locs.size();i++) {
-						//Iterating each of the superservers now
-						try {
-							String url_ss=superserver_locs.get(i);
-
-							if(!url_ss.equals(this.myURL)) {
-								url_ss+="?client=1";
-
-								//System.out.println("Using the url "+url_ss);
-								url= new URL(url_ss);
-								con=(HttpURLConnection)url.openConnection();
-								con.setRequestMethod("GET");
-
-								//Sends the message to the SS
-								new Thread(new ExecuteWSThread(url_ss,this.addmessage,"add")).start();
-
-								InputStream isi = con.getInputStream();
-								InputStreamReader isr = new InputStreamReader(isi);
-								BufferedReader in = new BufferedReader(isr);
-								String str;
-								StringBuilder sb = new StringBuilder();
-
-
-								while((str = in.readLine()) != null){
-									sb.append(str);
-									sb.append("\n");
-								}
-								//content.append(inputLine);
-								in.close();
-								isr.close();
-								isi.close();
-								con.disconnect();
-
-								System.out.println("I got response from SS:"+sb.toString());
-							}
-						} catch (MalformedURLException e) {
-							e.printStackTrace();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-
-					}
-				}
-			}
 			// Make a call to the lowest server with the starting value
 			// TODO: how do you make SOAP calls given the URL?
 			// Set the result to what the server returns
@@ -435,19 +453,8 @@ public class AsyncRequestProcessor implements Runnable {
 		}*/
 		//complete the processing
 		asyncContext.complete();
-		
-		FileOutputStream fos;
-		try {
-			fos = new FileOutputStream("E:\\git\\AOS\\SuperServer\\ServerRecords.txt");
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject("SERVER | Completed Request | " + (new Timestamp(System.currentTimeMillis())) +" | " + this.asyncContext.getRequest());
-			oos.close();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		
+				
+		System.out.println("AsyncRequestProcesser, reqHASH"+(System.currentTimeMillis()-startTime));
 	}
 
 	private void longProcessing(int secs) {
