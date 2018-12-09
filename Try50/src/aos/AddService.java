@@ -18,7 +18,7 @@ public class AddService implements AddInterface{
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		MyTaskQueue.getInstance().removeTask();
+		//MyTaskQueue.getInstance().removeTask();
 		//Should add some code for random exits as well
 		
 		
@@ -29,8 +29,8 @@ public class AddService implements AddInterface{
 
 	public int myload() {
 		int retVal=new Random().nextInt();
-		System.out.println("Im in WS ... return my load "+retVal);
-		return retVal;
+		System.out.println("Im in WS ... return my load "+MyTaskQueue.getInstance().getSize());
+		return MyTaskQueue.getInstance().getSize();
 	}
 	
 	
