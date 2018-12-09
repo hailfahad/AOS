@@ -6,7 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -14,6 +16,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.sun.jmx.snmp.Timestamp;
 
 import aos.common.WSDLContainer;
 
@@ -26,6 +30,7 @@ public class ServerListener extends HttpServlet {
     
 	private String wsdl_register;
 	public static WSDLContainer wsdlConObjLocal=null;
+	public ArrayList<String> ServerRecords;
 	
     /**
      * @see HttpServlet#HttpServlet()
@@ -35,6 +40,7 @@ public class ServerListener extends HttpServlet {
         super();
         // TODO Auto-generated constructor stub       
         //this.wsdlConObjLocal = new WSDLContainer();
+        this.ServerRecords = new ArrayList<String>();
     }
 
 	/**
@@ -45,7 +51,10 @@ public class ServerListener extends HttpServlet {
 		response.getWriter().append("Served at: ").append(request.getContextPath());
 		
 		System.out.println("I get an incoming request from server -- need to extract the WSDL and save it");
+		
 		response.setContentType("text/html;charset=UTF-8");
+		
+		this.ServerRecords.add("SERVER | Recieved from Server | " + (new Timestamp(System.currentTimeMillis())) +" | " + response);
 		
 		String server_wsdl_url=request.getParameter("WSDL");
 		
@@ -73,6 +82,17 @@ public class ServerListener extends HttpServlet {
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(this.wsdlConObjLocal);
 			oos.close();
+			
+			// Do i need to flush? 
+
+			fos = new FileOutputStream("E:\\git\\AOS\\SuperServer\\ServerRecords.txt");
+			oos = new ObjectOutputStream(fos);
+			Iterator<String> iter = this.ServerRecords.iterator();
+			while(iter.hasNext())
+				oos.writeObject(iter.next());
+			oos.close();
+		
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

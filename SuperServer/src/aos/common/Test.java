@@ -50,6 +50,43 @@ public class Test {
 		}
 
 		
+		Block inital  = new Block("test","0");
+		//System.out.println("first block" + inital.hash);
+		
+		Block inital2  = new Block("test2",inital.hash);
+		//System.out.println("second block" + inital2.hash);
+		
+		Block inital3  = new Block("test3",inital2.hash);
+		//System.out.println("thrid block" + inital3.hash);
+		
+		ArrayList<Block> chain = new ArrayList<Block>();
+		chain.add(inital);
+		chain.get(chain.size()-1).mine(1);
+		chain.add(inital2);
+		chain.get(chain.size()-1).mine(1);
+		chain.add(inital3);
+		chain.get(chain.size()-1).mine(1);
+		
+		Block curr, prev;
+		
+		String tar = new String(new char[1]).replace('\0', '0');
+		
+		System.out.println("target " + tar);
+		for(int i=1; i< chain.size(); i++) {
+			curr = chain.get(i);
+			prev = chain.get(i-1);
+			
+			if(!curr.hash.equals(curr.getHash())) {
+				System.out.println("u messed up");
+				break;
+			}
+			if(!prev.hash.equals(curr.previousHash)) {
+				System.out.println("u still meessed up");
+				break;
+			}
+		}
+		
+
 		
 		
 
