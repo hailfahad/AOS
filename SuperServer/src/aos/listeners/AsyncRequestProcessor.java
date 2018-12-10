@@ -360,6 +360,44 @@ public class AsyncRequestProcessor implements Runnable {
 				
 				//Waiting for more than half guys to respond and take a consensus and send that response back.
 				
+				// Assuming that I get a list of Responses and their chains
+				// 1 Map with (ServerName, Server Response)
+				// 2 Map with (ServerName, Server Hash)
+				// Assuming I know the total number of WS I have
+				HashMap<String, Integer> responseMap = null;
+				HashMap<String, String> chainMap = null;
+				int numWS = 5;
+				
+				while(responseMap.keySet().size() < Math.ceil((double) numWS / 2)) {
+					//wait();
+				}
+				
+				// Count number of heads and tails
+				int numHeads = 0;
+				int numTails = 0;
+				String longestTailChain = "";
+				String longestHeadChain = "";
+				for(String key: responseMap.keySet()) {
+					if(responseMap.get(key) == 0) {
+						numHeads ++;	
+						if(chainMap.get(key).length() > longestHeadChain.length()) {
+							longestHeadChain = chainMap.get(key);
+						}
+					}
+					else {
+						numTails ++;
+						if(chainMap.get(key).length() > longestTailChain.length()) {
+							longestTailChain = chainMap.get(key);
+						}
+					}
+				}
+				
+				String newChain = numHeads > numTails ? longestHeadChain : longestTailChain;
+				
+				// Send a message to all WS to update to newChain
+				
+				
+				
 				System.out.println("My thread has completed and hence, I reach here. -- Maybe I reach here on first thread completion "+ws_response);
 				if(!this.responseFlag) {
 					//It is false... first timer.. send response
