@@ -449,8 +449,8 @@ public class AsyncRequestProcessor implements Runnable {
 
 	public String getResponse(String chain) {
 		
-		
-		return "";
+		String[] chainParts = chain.split("\\|");
+		return chainParts[chainParts.length-2];
 	}
 	
 
@@ -458,13 +458,15 @@ public class AsyncRequestProcessor implements Runnable {
 		// Assuming that I get a list of Responses and their chains
 		// 1 Map with (ServerName, Server Response)
 		// 2 Map with (ServerName, Server Hash)
-		// Assuming I know the total number of WS I have
-		HashMap<String, Integer> responseMap = null;
-		HashMap<String, String> chainMap = null;
-		int numWS = 5;
+		// Assuming I know the total number of WS I have		
+		HashMap<String, Integer> responseMap = new HashMap<String,Integer>(); //id result
+		HashMap<String, String> chainMap = new HashMap<String,String>();// id chain	
 		
-		while(responseMap.keySet().size() < Math.ceil((double) numWS / 2)) {
-			//wait();
+		// Loads up the information given a chain
+		for (int i=0; i<listofChains.size(); i++){	
+			String[] chainParts = listofChains.get(i).split("\\|");
+			responseMap.put(""+i, Integer.getInteger(chainParts[chainParts.length-2]));
+			chainMap.put(""+i, listofChains.get(i));
 		}
 		
 		// Count number of heads and tails
