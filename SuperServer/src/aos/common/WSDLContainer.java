@@ -18,12 +18,13 @@ public class WSDLContainer implements Serializable{
 	private WSDLContainer() {
 		//if(wsdl_table == null) {
 		//}
+		wsdl_table=new ArrayList<String>();
 	}
 	
 	// Returns the entire container
 	public static WSDLContainer getInstance() {
 		
-		System.out.println("calling the getinstance "+wsdlContainerObj.wsdl_table);
+		//System.out.println("calling the getinstance "+wsdlContainerObj.wsdl_table);
 		return wsdlContainerObj;
 		
 	}

@@ -71,7 +71,7 @@ public class ServerListener extends HttpServlet {
 	@Override
 	public void destroy() {
 		// write object to file
-		FileOutputStream fos;
+		/*FileOutputStream fos;
 		try {
 			fos = new FileOutputStream(this.wsdl_register);
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -80,7 +80,7 @@ public class ServerListener extends HttpServlet {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+*/		
 	
 	}
 	

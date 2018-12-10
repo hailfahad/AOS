@@ -58,22 +58,9 @@ public class ClientListener extends HttpServlet {
 
 		if(client_code.equals("1")) {
 			//Request from client ..must spawn WS threads and SS threads
-
-			AsyncContext asyncCtx = request.startAsync();
-
-			asyncCtx.addListener(new AppAsyncListener());
-			asyncCtx.setTimeout(5*60*1000);
-
-			System.out.println("Spawning a LoadBalancer ");
-			this.ClientRecords.add("SERVER | Sending to WS (1) | " + (System.currentTimeMillis()) +" | " + client_code );
-			this.ClientRecords.add("SERVER | Sending to SS (0) | " + (System.currentTimeMillis()) +" | " + client_code );
-			new AsyncRequestProcessor(asyncCtx, 5*60*1000,Integer.parseInt(client_code)).run();
-			
-			//Spawn threads for SS here itself
-			// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
-				
 			//This should come from web.xml -- 
-/*			System.out.println("This is the path "+request.getRealPath("/"));
+
+			System.out.println("This is the path "+request.getRealPath("/"));
 			String superserver_list=request.getRealPath("/")+"/files/ServerRecords.txt";
 			try {
 				File f=new File(superserver_list);
@@ -94,18 +81,38 @@ public class ClientListener extends HttpServlet {
 				while ((line = bufferedReader.readLine()) != null) {
 					//Check and dont add the SS which is the same as self
 					System.out.println("Thjis sit he address "+line);
-					superserver_locs.add(line);
+					if(!line.contains(this.myURL))
+						superserver_locs.add(line);
 				}
 				fileReader.close();
 				System.out.println("Contents of file:"+superserver_locs);
+
+			
+			
+			AsyncContext asyncCtx = request.startAsync();
+
+			asyncCtx.addListener(new AppAsyncListener());
+			asyncCtx.setTimeout(5*60*1000);
+
+			System.out.println("Spawning a LoadBalancer ");
+			this.ClientRecords.add("SERVER | Sending to WS (1) | " + (System.currentTimeMillis()) +" | " + client_code );
+			this.ClientRecords.add("SERVER | Sending to SS (0) | " + (System.currentTimeMillis()) +" | " + client_code );
+			new AsyncRequestProcessor(asyncCtx, 5*60*1000,Integer.parseInt(client_code)).run();
+			//Spawn threads for SS here itself
+			// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
+				
+							
+				
+			
+				
 				//Got the list of all superserver.. Iterate and call them -- then implement more complicated logic
-				if(superserver_locs!=null && superserver_locs.size()>0) {
+				/*if(superserver_locs!=null && superserver_locs.size()>0) {
 					final CountDownLatch latch = new CountDownLatch(superserver_locs.size()-1);
 
 					for (int i=0;i<superserver_locs.size();i++) {
 						//Iterating each of the superservers now
 							String url_ss=superserver_locs.get(i);
-							if(!url_ss.contains(this.myURL)) {
+							//if(!url_ss.contains(this.myURL)) {
 								//url_ss+="?client=0";
 							
 								System.out.println("Using the url FOR SS  "+url_ss);
@@ -162,15 +169,15 @@ public class ClientListener extends HttpServlet {
 								
 								System.out.println("Must send response back over from here");
 								
-							}
+							//}
 					}
 				}
-				
+				*/
 			} catch (Exception e) {
 				// TODO: handle exception
 				System.out.println("Superserver list for client is an issue");
 				System.exit(0);
-			}*/
+			}
 		
 			
 		}else {
@@ -194,7 +201,7 @@ public class ClientListener extends HttpServlet {
 	@Override
 	public void destroy() {
 		// write object to file
-		FileOutputStream fos;
+	/*	FileOutputStream fos;
 		try {
 			fos = new FileOutputStream("E:\\git\\AOS\\SuperServer\\ServerRecords.txt");
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -206,7 +213,7 @@ public class ClientListener extends HttpServlet {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+	*/	
 	
 	}
 
