@@ -1,10 +1,12 @@
 package aos.listeners;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -38,6 +40,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+
 import aos.common.WSDLContainer;
 
 public class AsyncRequestProcessor implements Runnable {
@@ -59,6 +62,8 @@ public class AsyncRequestProcessor implements Runnable {
 	private String myURL = "";
 	private int serverRequestType = 0;  // 1 = send message to WS and SS | 0 is only send to SS
 
+	
+	private int howManyNeeded=0;
 	
 
 	public AsyncRequestProcessor(AsyncContext asyncCtx, int secs, int serverRequestType) {
@@ -139,7 +144,11 @@ public class AsyncRequestProcessor implements Runnable {
 	 * @return
 	 */
 	private ArrayList<String> findLowestServerLoads() {
-
+		String logFile=this.asyncContext.getRequest().getServletContext().getInitParameter("logFile");
+		
+		String msg="SS,LoadBalance,start,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
+		appendStuff(msg,  logFile);
+		
 		ArrayList<String> toReturn = null;
 		// Get the current WSDLContainer and iterate over the loads of each 
 		ArrayList<String> currentLoads = WSDLContainer.getInstance().getAll();
@@ -211,14 +220,52 @@ public class AsyncRequestProcessor implements Runnable {
 		}
 		
 		System.out.println("This is the return list "+toReturn);
+		if(toReturn!=null) {
+			this.howManyNeeded=((int)Math.ceil(toReturn.size()/2))+1; 	
+		}
+		msg="SS,LoadBalance,end,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
+		appendStuff(msg,  logFile);
+		
 		return toReturn;
 
 	}
 
+	
+	public void appendStuff(String message, String logFile) {
+    	try(FileWriter fw = new FileWriter(logFile, true);
+			    BufferedWriter bw = new BufferedWriter(fw);
+			    PrintWriter out = new PrintWriter(bw))
+			{
+			    //out.println("SS,ServerListener,"+startingTime+","+request);
+    		out.println(message+"\n");
+		   out.close();
+			} catch (IOException e) {
+			    //exception handling left as an exercise for the reader
+			}
+    }
+
+	
 
 	@Override
 	public void run() {
-		long startTime= System.currentTimeMillis();
+		String logFile=this.asyncContext.getRequest().getServletContext().getInitParameter("logFile");
+		
+		long startingTime= System.currentTimeMillis();
+		
+		String msg="SS,AsyncRequestProcessor,start,"+startingTime+","+this.asyncContext.getRequest();
+		appendStuff(msg,  logFile);
+		
+		// Storing the records for data usage
+		/*try {
+			FileOutputStream fos;
+			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject("SS | Spawning thread to get process thread | " + startingTime +" | " +"processing Request");
+			oos.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
 		//In this one needs to spawn new threads 
 
 		System.out.println("Async Supported? "
@@ -226,22 +273,52 @@ public class AsyncRequestProcessor implements Runnable {
 
 
 		ArrayList<String> lowestServer = this.findLowestServerLoads();
+		// Storing the records for data usage
+		/*try {
+			FileOutputStream fos;
+			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject("SS | Found set of lowestServers | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
+			oos.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
+		
 		// Get a response back from the server
 		if(lowestServer!=null) {
 			try {
-				final CountDownLatch latch = new CountDownLatch(1);
+				final CountDownLatch latch = new CountDownLatch(this.howManyNeeded);
 				for (String server : lowestServer) {
 					System.out.println("This si the server "+server);
 					String serverAddress = returnIP(server);
 					System.out.println("This is the server I want to contact "+serverAddress);
 					//AsyncContext asyncContextObj = this.asyncContext.getRequest().startAsync();
+					// Storing the records for data usage
+					/*try {
+						FileOutputStream fos;
+						fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+						ObjectOutputStream oos = new ObjectOutputStream(fos);
+						oos.writeObject("SS | Sending Request to  | "+ serverAddress +" | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
+						oos.close();
+						
+					} catch (IOException e) {
+						e.printStackTrace();
+					}*/
+					
+					
 					//This part needs to be handled -- Spawn a new thread and then capture the first response only
 					//Thread t= new Thread(new ExecuteWSThread(serverAddress,this.addmessage,"add"));
 					//t.start();
 
+					
+					
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
+							String msg="SS,WSSpawn,start,"+System.currentTimeMillis()+","+asyncContext.getRequest();
+							appendStuff(msg,  logFile);
+							
 							//4
 							//do your logic here in thread#2
 							System.out.println("Started thread for WS");
@@ -271,6 +348,18 @@ public class AsyncRequestProcessor implements Runnable {
 								}
 								rd.close();
 								System.out.println("OUTPUT "+response.toString());
+								
+								// Storing the records for data usage
+								try {
+									FileOutputStream fos;
+									fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+									ObjectOutputStream oos = new ObjectOutputStream(fos);
+									oos.writeObject("SS | Got Response from WS  | "+ serverAddress +" | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
+									oos.close();
+									
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
 								con.disconnect();
 
 							} catch (IOException e) {
@@ -288,6 +377,9 @@ public class AsyncRequestProcessor implements Runnable {
 							//5
 							latch.countDown();
 							
+							msg="SS,WSSpawn,end,"+System.currentTimeMillis()+","+asyncContext.getRequest();
+							appendStuff(msg,  logFile);
+							
 						}
 					}).start();
 					
@@ -296,6 +388,7 @@ public class AsyncRequestProcessor implements Runnable {
 					// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
 				
 
+						
 					try {
 						//3 this method will block the thread of latch untill its released later from thread#2
 						latch.await();
@@ -305,6 +398,13 @@ public class AsyncRequestProcessor implements Runnable {
 				}
 				
 				//Waiting for more than half guys to respond and take a consensus and send that response back.
+				//Will collect all chains responded by WSs and then send to majority finder.
+				
+				//Due to countdown.. i shud reach here when i get a response from these many nodes
+				//No need to wait anymore i suppose.
+				// Send a message to all WS to update to newChain
+				
+				
 				
 				System.out.println("My thread has completed and hence, I reach here. -- Maybe I reach here on first thread completion "+ws_response);
 				if(!this.responseFlag) {
@@ -337,25 +437,59 @@ public class AsyncRequestProcessor implements Runnable {
 				e.printStackTrace();
 			}
 
-
-			// Make a call to the lowest server with the starting value
-			// TODO: how do you make SOAP calls given the URL?
-			// Set the result to what the server returns
 		}
 
-
-		//longProcessing(secs);
-		/*try {
-			PrintWriter out = asyncContext.getResponse().getWriter();
-			out.write("Processing done for " + secs + " milliseconds!!");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-		//complete the processing
 		asyncContext.complete();
-				
-		System.out.println("AsyncRequestProcesser, reqHASH"+(System.currentTimeMillis()-startTime));
+		
+		msg="SS,AsyncRequestProcessor,end,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
+		appendStuff(msg,  logFile);
+		
+		System.out.println("AsyncRequestProcesser, reqHASH"+(System.currentTimeMillis()-startingTime));
 	}
 
+	public String getResponse(String chain) {
+		
+		
+		return "";
+	}
+	
 
+	public String getMajorityChain(ArrayList<String> listofChains) {
+		// Assuming that I get a list of Responses and their chains
+		// 1 Map with (ServerName, Server Response)
+		// 2 Map with (ServerName, Server Hash)
+		// Assuming I know the total number of WS I have
+		HashMap<String, Integer> responseMap = null;
+		HashMap<String, String> chainMap = null;
+		int numWS = 5;
+		
+		while(responseMap.keySet().size() < Math.ceil((double) numWS / 2)) {
+			//wait();
+		}
+		
+		// Count number of heads and tails
+		int numHeads = 0;
+		int numTails = 0;
+		String longestTailChain = "";
+		String longestHeadChain = "";
+		for(String key: responseMap.keySet()) {
+			if(responseMap.get(key) == 0) {
+				numHeads ++;	
+				if(chainMap.get(key).length() > longestHeadChain.length()) {
+					longestHeadChain = chainMap.get(key);
+				}
+			}
+			else {
+				numTails ++;
+				if(chainMap.get(key).length() > longestTailChain.length()) {
+					longestTailChain = chainMap.get(key);
+				}
+			}
+		}
+		
+		String newChain = numHeads > numTails ? longestHeadChain : longestTailChain;
+		
+		return newChain;
+	}
+	
 }

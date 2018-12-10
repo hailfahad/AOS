@@ -1,13 +1,16 @@
 package aos.listeners;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -32,9 +35,9 @@ import java.net.*;
 
 @WebServlet(urlPatterns = "/ClientListener", asyncSupported = true)
 public class ClientListener extends HttpServlet {
+	public ArrayList<String> ClientRecords;
+	
 
-
-	private ArrayList<String> ClientRecords; //Format of this string is SERVER | Message Type | Timestamp | Message 
 	private String myURL = "";
 
 	
@@ -42,19 +45,48 @@ public class ClientListener extends HttpServlet {
 		this.ClientRecords = new ArrayList<String>();
 	}
 
+	public void appendStuff(String message, String logFile) {
+    	try(FileWriter fw = new FileWriter(logFile, true);
+			    BufferedWriter bw = new BufferedWriter(fw);
+			    PrintWriter out = new PrintWriter(bw))
+			{
+			    //out.println("SS,ServerListener,"+startingTime+","+request);
+    		out.println(message+"\n");
+		   out.close();
+			} catch (IOException e) {
+			    //exception handling left as an exercise for the reader
+			}
+    }
+	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		System.out.println("Client has called me with a request -- Fork a thread which will go through the WSDLs, "
 				+ "call myload and figure out who to send the req and wait for response and then send the response back to client.");
-
+		// Storing the records for data usage
+		String logFile=request.getServletContext().getInitParameter("logFile");
+		
 		long startTime=System.currentTimeMillis();
+		String msg="SS,ClientListener,start,"+startTime+","+request;
+		appendStuff(msg,  logFile);
+		
+		/*try {
+			FileOutputStream fos;
+			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject("SS | Recieved Request From Client | " + startTime +" | " +"processing Request");
+			oos.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
+
+
 		
 		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
 		// Value that the client wants a number to be added to
 		String client_code=request.getParameter("client");
 
 		System.out.println("Got the client code "+client_code);
-		this.ClientRecords.add("SERVER | Recieved from Client | " + (System.currentTimeMillis()) +" | " + client_code );
-
+		
 
 		if(client_code.equals("1")) {
 			//Request from client ..must spawn WS threads and SS threads
@@ -186,11 +218,27 @@ public class ClientListener extends HttpServlet {
 
 			asyncCtx.addListener(new AppAsyncListener());
 			asyncCtx.setTimeout(5*60*1000);
-			this.ClientRecords.add("SERVER | Sending to WS (0) | " + (System.currentTimeMillis()) +" | " + client_code );
+			
+			// Used to store information for data collection
+			try {
+				FileOutputStream fos;
+				fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+				ObjectOutputStream oos = new ObjectOutputStream(fos);
+				oos.writeObject("SS | Sending Request to WS | " + (System.currentTimeMillis() - startTime) +" | " + request);
+				oos.close();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 			new AsyncRequestProcessor(asyncCtx, 5*60*1000,0).run();
 
 		}
 
+		
+		msg="SS,ClientListener,end,"+(System.currentTimeMillis())+","+request;
+		appendStuff(msg,  logFile);
+		
 		System.out.println("ClientListener, reqHASH,"+(System.currentTimeMillis()-startTime));
 	}
 
@@ -200,20 +248,6 @@ public class ClientListener extends HttpServlet {
 	
 	@Override
 	public void destroy() {
-		// write object to file
-	/*	FileOutputStream fos;
-		try {
-			fos = new FileOutputStream("E:\\git\\AOS\\SuperServer\\ServerRecords.txt");
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			Iterator<String> iter = this.ClientRecords.iterator();
-			while(iter.hasNext())
-				oos.writeObject(iter.next());
-			oos.close();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	*/	
 	
 	}
 

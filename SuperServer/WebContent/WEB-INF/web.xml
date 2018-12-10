@@ -10,7 +10,10 @@
     <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
   
-  
+  <context-param>
+  	<param-name>logFile</param-name>
+  	<param-value>/home/siddiqui/aos/ss_logs.txt</param-value>
+  </context-param>
   <servlet>
       <servlet-name>ServerServlet</servlet-name>
       <servlet-class>aos.listeners.ServerListener</servlet-class>

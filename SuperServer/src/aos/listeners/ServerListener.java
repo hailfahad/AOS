@@ -1,11 +1,14 @@
 package aos.listeners;
 
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,16 +41,46 @@ public class ServerListener extends HttpServlet {
         super();
         // TODO Auto-generated constructor stub       
         //this.wsdlConObjLocal = new WSDLContainer();
-        //this.ServerRecords = new ArrayList<String>();
+        this.ServerRecords = new ArrayList<String>();
     }
 
+    public void appendStuff(String message, String logFile) {
+    	try(FileWriter fw = new FileWriter(logFile, true);
+			    BufferedWriter bw = new BufferedWriter(fw);
+			    PrintWriter out = new PrintWriter(bw))
+			{
+			    //out.println("SS,ServerListener,"+startingTime+","+request);
+    		out.println(message);
+			   
+			} catch (IOException e) {
+			    //exception handling left as an exercise for the reader
+			}
+    }
+    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		//this.ServerRecords.add("SERVER | Recieved from Server | " + (System.currentTimeMillis()) +" | " + response);
+		String logFile=request.getServletContext().getInitParameter("logFile");
 		
+		
+		// Storing the records for data usage
+		long startingTime=System.currentTimeMillis();
+		String msg="SS,ServerListener,start,"+startingTime+","+request;
+		appendStuff(msg,  logFile);
+		
+		/*try {
+			FileOutputStream fos;
+			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject("SS | Recieved Request From Server | " + startingTime +" | " + request);
+			oos.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
+				
 		response.getWriter().append("Served at: ").append(request.getContextPath());
 		System.out.println("I get an incoming request from server -- need to extract the WSDL and save it");
 		response.setContentType("text/html;charset=UTF-8");
@@ -56,7 +89,21 @@ public class ServerListener extends HttpServlet {
 		this.wsdlConObjLocal.add(server_wsdl_url);
 		
 		//Save this somewhere and persist it somewhere
+		
+		msg="SS,ServerListener,end,"+(System.currentTimeMillis())+","+request;
+		appendStuff(msg,  logFile);
+		
 		response.getWriter().write("SUCCESS");
+		/*try {
+			FileOutputStream fos;
+			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject("SS | Saved data from server | " + (System.currentTimeMillis()-startingTime) +" | " + request);
+			oos.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
 		
 	}
 
@@ -70,18 +117,6 @@ public class ServerListener extends HttpServlet {
 
 	@Override
 	public void destroy() {
-		// write object to file
-		/*FileOutputStream fos;
-		try {
-			fos = new FileOutputStream(this.wsdl_register);
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(this.wsdlConObjLocal);
-			oos.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-*/		
-	
 	}
 	
 	@Override
