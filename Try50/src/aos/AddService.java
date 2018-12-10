@@ -1,23 +1,31 @@
 package aos;
 
+import java.io.BufferedWriter;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-import com.sun.jmx.snmp.Timestamp;
+
 
 public class AddService implements AddInterface{
+	
+	int identifier = new Random().nextInt();
+	
 	//Should add code for performance logging perspective from WS server perspective
 	
 	public int add() {
 		
 		long startingTime = System.currentTimeMillis();
-		
+		String msg="SS,AddService:add,start,"+startingTime+","+identifier;
+		appendStuff(msg,  MyTaskQueue.getInstance().getLogFile());
+	
 		// Storing the records for data usage
-		try {
+		/*try {
 			FileOutputStream fos;
 			fos = new FileOutputStream("..\\..\\..\\WSRecords.txt");
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -26,7 +34,8 @@ public class AddService implements AddInterface{
 			
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
+
 		MyTaskQueue.getInstance().addTask();
 		
 		//Spawn a thread to handle the incoming service.. else it is a blocking call
@@ -49,7 +58,7 @@ public class AddService implements AddInterface{
 		
 		// Storing the records for data usage
 		System.out.println("This is the val being returned "+retVal);
-		try {
+		/*try {
 			FileOutputStream fos;
 			fos = new FileOutputStream("..\\..\\..\\WSRecords.txt");
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -58,7 +67,7 @@ public class AddService implements AddInterface{
 			
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		// Check to see if my chain is empty if it is hash new string
 		if(Chain.getInstance().chain.isEmpty()) {
@@ -70,26 +79,34 @@ public class AddService implements AddInterface{
 			Chain.getInstance().add(new Block(""+retVal, lastHash));
 		}
 		
+	
+		msg="SS,AddService:add,end,"+startingTime+","+identifier;
+		appendStuff(msg,  MyTaskQueue.getInstance().getLogFile());
 		
 		return retVal;
 	}
 
+	public synchronized void appendStuff(String message, String logFile) {
+    	try(FileWriter fw = new FileWriter(logFile, true);
+			    BufferedWriter bw = new BufferedWriter(fw);
+			    PrintWriter out = new PrintWriter(bw))
+			{
+			    //out.println("SS,ServerListener,"+startingTime+","+request);
+    		out.println(message+"\n");
+		   out.close();
+			} catch (IOException e) {
+			    //exception handling left as an exercise for the reader
+			}
+    }
+	
 	public int myload() {
 		
 		long startingTime = System.currentTimeMillis();
 		
+		String msg="SS,AddService:myload,start,"+startingTime+","+identifier;
+		appendStuff(msg,  MyTaskQueue.getInstance().getLogFile());
+	
 		// Storing the records for data usage
-		try {
-			FileOutputStream fos;
-			fos = new FileOutputStream("..\\..\\..\\WSRecords.txt");
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject("WSERVER | Recieved Load Request From Server | " + startingTime +" | " +"processing Request");
-			oos.close();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
 		int retVal=new Random().nextInt();
 		System.out.println("Im in WS ... return my load "+MyTaskQueue.getInstance().getSize());
 		
@@ -105,6 +122,10 @@ public class AddService implements AddInterface{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	
+		msg="SS,AddService:myload,end,"+System.currentTimeMillis()+","+identifier;
+		appendStuff(msg,  MyTaskQueue.getInstance().getLogFile());
+	
 		
 		return MyTaskQueue.getInstance().getSize();
 	}
