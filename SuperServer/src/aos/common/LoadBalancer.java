@@ -9,8 +9,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.SocketException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,6 +68,19 @@ public class LoadBalancer implements Runnable{
 		this.serverRequestType = startingValue;
 		this.LoadBalancerRecords = new ArrayList<String>();
 		this.LoadBalancerRecords.add("LOADBALANCER | Creating | " + (new Timestamp(System.currentTimeMillis())) + " | " + this.asyncContext.getRequest() );
+		
+		// https://stackoverflow.com/questions/9481865/getting-the-ip-address-of-the-current-machine-using-java
+		try(final DatagramSocket socket = new DatagramSocket())
+		{
+			  socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+			  this.myURL = socket.getLocalAddress().getHostAddress();
+		} catch (UnknownHostException e) {
+			System.out.println("There is something wrong with my configuration");
+			e.printStackTrace();
+		} catch (SocketException e1) {
+			System.out.println("could not create a new datagram socket");
+			e1.printStackTrace();
+		}
 
 	}
 	/**
@@ -252,9 +269,9 @@ public class LoadBalancer implements Runnable{
 			// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
 			if(this.serverRequestType == 0) {
 
-				//TODO: create the list of SS
-				String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
-
+				// TODO: create the list of SS change location of 
+				// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
+				String superserver_list="E:\\git\\AOS\\Try50\\SuperServerList.txt";
 				LinkedList<String> superserver_locs=null;
 
 				try {
@@ -287,7 +304,7 @@ public class LoadBalancer implements Runnable{
 						try {
 							String url_ss=superserver_locs.get(i);
 
-							if(url_ss.equals(this.myURL)) {
+							if(!url_ss.equals(this.myURL)) {
 								url_ss+="?client=1";
 
 								//System.out.println("Using the url "+url_ss);
