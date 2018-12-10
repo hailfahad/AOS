@@ -130,5 +130,10 @@ public class AddService implements AddInterface{
 		return MyTaskQueue.getInstance().getSize();
 	}
 	
+	public void updateChain(String update){
+		
+		Chain.getInstance().updateChain(update);
+	}
+	
 	
 }
