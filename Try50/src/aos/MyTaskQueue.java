@@ -8,6 +8,8 @@ public class MyTaskQueue{
 	private Queue<Integer> mytask=null;
 	private static MyTaskQueue myTaskQueueObj=null;
 	
+	private String logFile=null;
+	
 	private MyTaskQueue() {
 		mytask=new LinkedList<>();
 		
@@ -30,5 +32,13 @@ public class MyTaskQueue{
 	
 	public int getSize() {
 		return mytask.size();
+	}
+	
+	public void setLogFile(String logFile) {
+		this.logFile=logFile;
+	}
+	
+	public String getLogFile() {
+		return this.logFile;
 	}
 }

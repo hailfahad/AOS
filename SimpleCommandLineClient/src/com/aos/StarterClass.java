@@ -1,13 +1,16 @@
 package com.aos;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,7 +38,24 @@ import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlImporter;
 import com.eviware.soapui.model.iface.Operation;
 
+
 public class StarterClass {
+	
+	int counter=0;
+	
+	public synchronized void  appendStuff(String message, String logFile) {
+    	try(FileWriter fw = new FileWriter(logFile, true);
+			    BufferedWriter bw = new BufferedWriter(fw);
+			    PrintWriter out = new PrintWriter(bw))
+			{
+			    //out.println("SS,ServerListener,"+startingTime+","+request);
+    		out.println(message+"\n");
+		   out.close();
+			} catch (IOException e) {
+			    //exception handling left as an exercise for the reader
+			}
+    }
+	
 	public static void main(String[] args) {
 		//Client starts from here.. it will take input of a file which will contain the list of superservers which Client knows about..
 		//These could be one or many..
@@ -43,12 +63,20 @@ public class StarterClass {
 		/*int retVal= ThreadLocalRandom.current().nextInt(0,1);
 		System.out.println(retVal);
 		System.exit(1);*/
+		
+		String clientLog="/home/siddiqui/aos/clientLog.txt";
+		StarterClass stObj = new StarterClass();
+		
 		for(int i=0;i<1;i++) {
-			StarterClass stObj = new StarterClass();
 			//stObj.doClientThing();
+			
+			stObj.counter=i;
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
+					String msg="SS,StarterClass,start,"+System.currentTimeMillis()+","+stObj.counter;
+					stObj.appendStuff(msg, clientLog);
+				
 					//hardcoding file path for now
 					String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
 					
@@ -120,6 +148,9 @@ public class StarterClass {
 							
 						//}
 					}
+					msg="SS,StarterClass,end,"+System.currentTimeMillis()+","+stObj.counter;
+					stObj.appendStuff(msg, clientLog);
+				
 				}	
 				}).start();
 		}

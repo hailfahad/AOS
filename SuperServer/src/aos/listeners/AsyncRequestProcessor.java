@@ -64,6 +64,7 @@ public class AsyncRequestProcessor implements Runnable {
 
 	
 	private int howManyNeeded=0;
+	int counter=0;
 	
 
 	public AsyncRequestProcessor(AsyncContext asyncCtx, int secs, int serverRequestType) {
@@ -231,7 +232,7 @@ public class AsyncRequestProcessor implements Runnable {
 	}
 
 	
-	public void appendStuff(String message, String logFile) {
+	public synchronized void appendStuff(String message, String logFile) {
     	try(FileWriter fw = new FileWriter(logFile, true);
 			    BufferedWriter bw = new BufferedWriter(fw);
 			    PrintWriter out = new PrintWriter(bw))
@@ -289,6 +290,7 @@ public class AsyncRequestProcessor implements Runnable {
 		if(lowestServer!=null) {
 			try {
 				final CountDownLatch latch = new CountDownLatch(this.howManyNeeded);
+				
 				for (String server : lowestServer) {
 					System.out.println("This si the server "+server);
 					String serverAddress = returnIP(server);
@@ -311,12 +313,13 @@ public class AsyncRequestProcessor implements Runnable {
 					//Thread t= new Thread(new ExecuteWSThread(serverAddress,this.addmessage,"add"));
 					//t.start();
 
+					counter++;
 					
 					
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							String msg="SS,WSSpawn,start,"+System.currentTimeMillis()+","+asyncContext.getRequest();
+							String msg="SS,WSSpawn"+counter+",start,"+System.currentTimeMillis()+","+asyncContext.getRequest();
 							appendStuff(msg,  logFile);
 							
 							//4

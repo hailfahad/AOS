@@ -45,6 +45,8 @@ public class Register implements javax.servlet.Servlet {
 	public void init(ServletConfig config) throws ServletException {
 		System.out.println("In im init method and shall sent across my WSDL");
 		System.out.println("WSDL "+config.getServletContext().getContextPath());
+		String logFile=config.getServletContext().getInitParameter("logFile");
+		MyTaskQueue.getInstance().setLogFile(logFile);
 		
 		System.out.println("Context name "+config.getServletContext().getServletContextName());
 		//System.out.println("Server Info "+config.getServletContext().getServerInfo());

@@ -44,7 +44,7 @@ public class ServerListener extends HttpServlet {
         this.ServerRecords = new ArrayList<String>();
     }
 
-    public void appendStuff(String message, String logFile) {
+    public synchronized void appendStuff(String message, String logFile) {
     	try(FileWriter fw = new FileWriter(logFile, true);
 			    BufferedWriter bw = new BufferedWriter(fw);
 			    PrintWriter out = new PrintWriter(bw))
