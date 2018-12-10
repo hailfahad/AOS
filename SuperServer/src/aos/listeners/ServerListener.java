@@ -54,7 +54,8 @@ public class ServerListener extends HttpServlet {
 		System.out.println("I get an incoming request from server -- need to extract the WSDL and save it");
 		response.setContentType("text/html;charset=UTF-8");
 		String server_wsdl_url=request.getParameter("WSDL");
-		this.wsdlConObjLocal.add(server_wsdl_url, 0);
+		System.out.println("Got the wsdl as "+server_wsdl_url);
+		this.wsdlConObjLocal.add(server_wsdl_url);
 		
 		//Save this somewhere and persist it somewhere
 		response.getWriter().write("SUCCESS");

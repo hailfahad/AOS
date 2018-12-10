@@ -56,7 +56,7 @@ public class AsyncRequestProcessor implements Runnable {
 	private Pattern loadpattern = Pattern.compile("<myloadReturn xsi:type=\"xsd:int\">(.+?)</myloadReturn>", Pattern.DOTALL);
 	private Pattern addpattern = Pattern.compile("<addReturn>(.+?)</addReturn>", Pattern.DOTALL);
 
-	private LinkedList<String> ws_response=new LinkedList(); 
+	private String ws_response=null; 
 	private boolean responseFlag=false;
 
 	private String myURL = "";
@@ -145,6 +145,7 @@ public class AsyncRequestProcessor implements Runnable {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		}
 		return response.toString();
 
@@ -157,7 +158,10 @@ public class AsyncRequestProcessor implements Runnable {
 
 		ArrayList<String> toReturn = null;
 		// Get the current WSDLContainer and iterate over the loads of each 
-		HashMap<String, Integer> currentLoads = WSDLContainer.getInstance().getAll();
+		ArrayList<String> currentLoads = WSDLContainer.getInstance().getAll();
+		
+		System.out.println("This is the current load "+currentLoads.size());
+		//HashMap<String, Integer> dataLoaded=new HashMap<String, Integer>();
 		// Find the smallest load and parse the WSDL for the information to contact the server
 
 		HashMap<Integer, ArrayList<String>> toSort = new HashMap<Integer,ArrayList<String>>();
@@ -166,34 +170,33 @@ public class AsyncRequestProcessor implements Runnable {
 			toReturn=new ArrayList<String>();
 			//TODO:  If you want to find the different services offered by a servlet you can use ADDService look for wsdl:operation
 			try {
-				for (String key : currentLoads.keySet()) {
-
+				for (String key : currentLoads) {
 					String url = this.returnIP(key);
-					// https://www.baeldung.com/java-http-request
-
 					System.out.println("This is the load url to hit "+url);
 					String res=communicateWS( url,this.myloadmessage,"myload");
 
+					if(res!=null) {
+						Matcher matcher = loadpattern.matcher(res);
+						matcher.find();
+						int response = Integer.parseInt(matcher.group(1));
+						System.out.println("What did i get for my load "+response);
+
+						toReturn.add(key);
+					}
 					//URL connection = new URL(url+"/myLoad");
 					//HttpURLConnection con = (HttpURLConnection) connection.openConnection();
 					//con.setRequestMethod("GET");
-
 					//Parse and figure the actual val returned
-					Matcher matcher = loadpattern.matcher(res);
-					matcher.find();
-					//System.out.println();
-
 					//int response = Integer.parseInt(con.getResponseMessage());
-					int response = Integer.parseInt(matcher.group(1));
-					System.out.println("What did i get for my load "+response);
 
-					currentLoads.put(url, response);
-
-					int load = currentLoads.get(key);
+					//currentLoads.put(url, response);
+					/*
+					int load = dataLoaded.get(key);
+					
 					if(toSort.get(load).isEmpty()) {
 						toSort.put(load, new ArrayList<String>());
 					}
-					toSort.get(load).add(key);
+					toSort.get(load).add(key);*/
 				}
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
@@ -208,21 +211,19 @@ public class AsyncRequestProcessor implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-			TreeSet<Integer> sortedSet = new TreeSet<Integer>();
+			/*TreeSet<Integer> sortedSet = new TreeSet<Integer>();
 			ArrayList<String> sortedLoads = new ArrayList<String>();
 			sortedSet.addAll(toSort.keySet());
 			for (Integer currKey : sortedSet) {
 				sortedLoads.addAll(toSort.get(currKey));
 			}
-
 			if (sortedLoads.size() > 3) {
 				for (int i = 0; i < 3; i++ ) {
 					toReturn.add(sortedLoads.get(i));
 				}
 			}
 			else 
-				return sortedLoads;
+				return sortedLoads;*/
 		}
 		return toReturn;
 
@@ -239,14 +240,16 @@ public class AsyncRequestProcessor implements Runnable {
 
 
 		ArrayList<String> lowestServer = this.findLowestServerLoads();
+		System.out.println("Found lowest guys "+lowestServer.size());
 		// Get a response back from the server
 		if(lowestServer!=null) {
 			try {
 				final CountDownLatch latch = new CountDownLatch(1);
 				for (String server : lowestServer) {
+					System.out.println("This si the server "+server);
 					String serverAddress = returnIP(server);
+					System.out.println("This is the server I want to contact "+serverAddress);
 					//AsyncContext asyncContextObj = this.asyncContext.getRequest().startAsync();
-
 					//This part needs to be handled -- Spawn a new thread and then capture the first response only
 					//Thread t= new Thread(new ExecuteWSThread(serverAddress,this.addmessage,"add"));
 					//t.start();
@@ -256,7 +259,7 @@ public class AsyncRequestProcessor implements Runnable {
 						public void run() {
 							//4
 							//do your logic here in thread#2
-							
+							System.out.println("Started thread for WS");
 							StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
 							URL url;
 							try {
@@ -286,7 +289,6 @@ public class AsyncRequestProcessor implements Runnable {
 								con.disconnect();
 
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
 
@@ -295,7 +297,7 @@ public class AsyncRequestProcessor implements Runnable {
 							Matcher matcher = addpattern.matcher(res);
 							matcher.find();
 
-							ws_response.add(matcher.group(1));
+							ws_response=matcher.group(1);
 
 							//then release the lock
 							//5
@@ -307,7 +309,7 @@ public class AsyncRequestProcessor implements Runnable {
 					//I would need to spawn threads for Calling the other SS and then wait for the first guy
 					
 					// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
-					if(this.serverRequestType == 1) {
+					if(this.serverRequestType == 5) {
 
 						// TODO: create the list of SS change location of 
 						// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
@@ -361,7 +363,6 @@ public class AsyncRequestProcessor implements Runnable {
 											String str;
 											StringBuilder sb = new StringBuilder();
 
-
 											while((str = in.readLine()) != null){
 												sb.append(str);
 												sb.append("\n");
@@ -397,14 +398,9 @@ public class AsyncRequestProcessor implements Runnable {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-
 				}
 				
 				//Waiting for more than half guys to respond and take a consensus and send that response back.
-				
-				
-			
-				
 				
 				System.out.println("My thread has completed and hence, I reach here. -- Maybe I reach here on first thread completion "+ws_response);
 				if(!this.responseFlag) {
