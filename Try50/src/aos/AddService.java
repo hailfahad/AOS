@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.sun.jmx.snmp.Timestamp;
 
@@ -43,7 +44,8 @@ public class AddService implements AddInterface{
 		//Should add some code for random exits as well
 		
 		
-		int retVal=(int) Math.pow(new Random().nextInt(),2);
+		//int retVal=(int) Math.pow(new Random().nextInt(),2);
+		int retVal= ThreadLocalRandom.current().nextInt(0,1);
 		
 		// Storing the records for data usage
 		System.out.println("This is the val being returned "+retVal);

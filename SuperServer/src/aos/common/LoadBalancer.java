@@ -166,7 +166,9 @@ public class LoadBalancer implements Runnable{
 
 		ArrayList<String> toReturn = null;
 		// Get the current WSDLContainer and iterate over the loads of each 
-		HashMap<String, Integer> currentLoads = WSDLContainer.getInstance().getAll();
+		ArrayList<String> currentLoads = WSDLContainer.getInstance().getAll();
+		HashMap<String, Integer> dataLoaded=new HashMap();
+		
 		HashMap<Integer, ArrayList<String>> toSort = new HashMap<Integer,ArrayList<String>>();
 		// Find the smallest load and parse the WSDL for the information to contact the server
 		int min = Integer.MAX_VALUE;
@@ -174,7 +176,7 @@ public class LoadBalancer implements Runnable{
 			toReturn=new ArrayList<String>();
 			//TODO:  If you want to find the different services offered by a servlet you can use ADDService look for wsdl:operation
 			try {
-				for (String key : currentLoads.keySet()) {
+				for (String key : currentLoads) {
 
 					String url = this.returnIP(key);
 					// https://www.baeldung.com/java-http-request
@@ -195,9 +197,9 @@ public class LoadBalancer implements Runnable{
 					int response = Integer.parseInt(matcher.group(1));
 					System.out.println("What did i get for my load "+response);
 
-					currentLoads.put(url, response);
+					dataLoaded.put(url, response);
 
-					int load = currentLoads.get(key);
+					int load = dataLoaded.get(key);
 					if(toSort.get(load).isEmpty()) {
 						toSort.put(load, new ArrayList<String>());
 					}

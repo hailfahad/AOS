@@ -17,8 +17,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.sun.jmx.snmp.Timestamp;
-
 import aos.common.WSDLContainer;
 
 /**
@@ -29,7 +27,7 @@ public class ServerListener extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     
 	private String wsdl_register;
-	public static WSDLContainer wsdlConObjLocal=null;
+	public WSDLContainer wsdlConObjLocal=null;
 	public ArrayList<String> ServerRecords;
 	
     /**
@@ -40,7 +38,7 @@ public class ServerListener extends HttpServlet {
         super();
         // TODO Auto-generated constructor stub       
         //this.wsdlConObjLocal = new WSDLContainer();
-        this.ServerRecords = new ArrayList<String>();
+        //this.ServerRecords = new ArrayList<String>();
     }
 
 	/**
@@ -65,7 +63,8 @@ public class ServerListener extends HttpServlet {
 		System.out.println("I get an incoming request from server -- need to extract the WSDL and save it");
 		response.setContentType("text/html;charset=UTF-8");
 		String server_wsdl_url=request.getParameter("WSDL");
-		this.wsdlConObjLocal.add(server_wsdl_url, 0);
+		System.out.println("Got the wsdl as "+server_wsdl_url);
+		this.wsdlConObjLocal.add(server_wsdl_url);
 		
 		//Save this somewhere and persist it somewhere
 		response.getWriter().write("SUCCESS");
@@ -105,8 +104,10 @@ public class ServerListener extends HttpServlet {
 			fis = new FileInputStream(this.wsdl_register);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			this.wsdlConObjLocal = (WSDLContainer) ois.readObject();
+			System.out.println("this is the table "+this.wsdlConObjLocal.getAll().size());
 			ois.close();
 		} catch (IOException | ClassNotFoundException e) {
+			System.out.println("Error ");
 			this.wsdlConObjLocal = WSDLContainer.getInstance();
 			//e.printStackTrace();
 		}

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.net.*;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
@@ -41,7 +42,6 @@ import org.xml.sax.SAXException;
 
 import aos.common.ExecuteWSThread;
 import aos.common.WSDLContainer;
-import sun.net.www.protocol.http.HttpURLConnection;
 
 public class AsyncRequestProcessor implements Runnable {
 
@@ -56,7 +56,7 @@ public class AsyncRequestProcessor implements Runnable {
 	private Pattern loadpattern = Pattern.compile("<myloadReturn xsi:type=\"xsd:int\">(.+?)</myloadReturn>", Pattern.DOTALL);
 	private Pattern addpattern = Pattern.compile("<addReturn>(.+?)</addReturn>", Pattern.DOTALL);
 
-	private LinkedList<String> ws_response=new LinkedList(); 
+	private String ws_response=null; 
 	private boolean responseFlag=false;
 
 	private String myURL = "";
@@ -70,19 +70,6 @@ public class AsyncRequestProcessor implements Runnable {
 		this.serverRequestType=serverRequestType;
 		
 		// https://stackoverflow.com/questions/9481865/getting-the-ip-address-of-the-current-machine-using-java
-				try(final DatagramSocket socket = new DatagramSocket())
-				{
-					socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
-					this.myURL = socket.getLocalAddress().getHostAddress();
-					System.out.println("What is my URL in the constructor "+this.myURL);
-					
-				} catch (UnknownHostException e) {
-					System.out.println("There is something wrong with my configuration");
-					e.printStackTrace();
-				} catch (SocketException e1) {
-					System.out.println("could not create a new datagram socket");
-					e1.printStackTrace();
-				}
 	}
 
 	public String returnIP(String wsdl) throws ParserConfigurationException, MalformedURLException, SAXException, IOException {
@@ -145,6 +132,7 @@ public class AsyncRequestProcessor implements Runnable {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		}
 		return response.toString();
 
@@ -157,7 +145,10 @@ public class AsyncRequestProcessor implements Runnable {
 
 		ArrayList<String> toReturn = null;
 		// Get the current WSDLContainer and iterate over the loads of each 
-		HashMap<String, Integer> currentLoads = WSDLContainer.getInstance().getAll();
+		ArrayList<String> currentLoads = WSDLContainer.getInstance().getAll();
+		
+		System.out.println("This is the current load "+currentLoads.size());
+		//HashMap<String, Integer> dataLoaded=new HashMap<String, Integer>();
 		// Find the smallest load and parse the WSDL for the information to contact the server
 
 		HashMap<Integer, ArrayList<String>> toSort = new HashMap<Integer,ArrayList<String>>();
@@ -166,34 +157,33 @@ public class AsyncRequestProcessor implements Runnable {
 			toReturn=new ArrayList<String>();
 			//TODO:  If you want to find the different services offered by a servlet you can use ADDService look for wsdl:operation
 			try {
-				for (String key : currentLoads.keySet()) {
-
+				for (String key : currentLoads) {
 					String url = this.returnIP(key);
-					// https://www.baeldung.com/java-http-request
-
 					System.out.println("This is the load url to hit "+url);
 					String res=communicateWS( url,this.myloadmessage,"myload");
 
+					if(res!=null) {
+						Matcher matcher = loadpattern.matcher(res);
+						matcher.find();
+						int response = Integer.parseInt(matcher.group(1));
+						System.out.println("What did i get for my load "+response);
+
+						toReturn.add(key);
+					}
 					//URL connection = new URL(url+"/myLoad");
 					//HttpURLConnection con = (HttpURLConnection) connection.openConnection();
 					//con.setRequestMethod("GET");
-
 					//Parse and figure the actual val returned
-					Matcher matcher = loadpattern.matcher(res);
-					matcher.find();
-					//System.out.println();
-
 					//int response = Integer.parseInt(con.getResponseMessage());
-					int response = Integer.parseInt(matcher.group(1));
-					System.out.println("What did i get for my load "+response);
 
-					currentLoads.put(url, response);
-
-					int load = currentLoads.get(key);
+					//currentLoads.put(url, response);
+					/*
+					int load = dataLoaded.get(key);
+					
 					if(toSort.get(load).isEmpty()) {
 						toSort.put(load, new ArrayList<String>());
 					}
-					toSort.get(load).add(key);
+					toSort.get(load).add(key);*/
 				}
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
@@ -208,22 +198,22 @@ public class AsyncRequestProcessor implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-			TreeSet<Integer> sortedSet = new TreeSet<Integer>();
+			/*TreeSet<Integer> sortedSet = new TreeSet<Integer>();
 			ArrayList<String> sortedLoads = new ArrayList<String>();
 			sortedSet.addAll(toSort.keySet());
 			for (Integer currKey : sortedSet) {
 				sortedLoads.addAll(toSort.get(currKey));
 			}
-
 			if (sortedLoads.size() > 3) {
 				for (int i = 0; i < 3; i++ ) {
 					toReturn.add(sortedLoads.get(i));
 				}
 			}
 			else 
-				return sortedLoads;
+				return sortedLoads;*/
 		}
+		
+		System.out.println("This is the return list "+toReturn);
 		return toReturn;
 
 	}
@@ -269,9 +259,10 @@ public class AsyncRequestProcessor implements Runnable {
 			try {
 				final CountDownLatch latch = new CountDownLatch(1);
 				for (String server : lowestServer) {
+					System.out.println("This si the server "+server);
 					String serverAddress = returnIP(server);
+					System.out.println("This is the server I want to contact "+serverAddress);
 					//AsyncContext asyncContextObj = this.asyncContext.getRequest().startAsync();
-
 					// Storing the records for data usage
 					try {
 						FileOutputStream fos;
@@ -294,7 +285,7 @@ public class AsyncRequestProcessor implements Runnable {
 						public void run() {
 							//4
 							//do your logic here in thread#2
-							
+							System.out.println("Started thread for WS");
 							StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
 							URL url;
 							try {
@@ -336,7 +327,6 @@ public class AsyncRequestProcessor implements Runnable {
 								con.disconnect();
 
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
 
@@ -345,7 +335,7 @@ public class AsyncRequestProcessor implements Runnable {
 							Matcher matcher = addpattern.matcher(res);
 							matcher.find();
 
-							ws_response.add(matcher.group(1));
+							ws_response=matcher.group(1);
 
 							//then release the lock
 							//5
@@ -357,128 +347,18 @@ public class AsyncRequestProcessor implements Runnable {
 					//I would need to spawn threads for Calling the other SS and then wait for the first guy
 					
 					// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
-					if(this.serverRequestType == 1) {
+				
 
-						// TODO: create the list of SS change location of 
-						// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
 						
-						//This should come from web.xml -- 
-						String superserver_list="..\\..\\..\\SuperServerList.txt";
-						LinkedList<String> superserver_locs=null;
-						
-						// Storing the records for data usage
-						try {
-							FileOutputStream fos;
-							fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
-							ObjectOutputStream oos = new ObjectOutputStream(fos);
-							oos.writeObject("SS | Sending Request to other SS and WS | "+ serverAddress +" | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
-							oos.close();
-							
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-
-						try {
-							File file = new File(superserver_list);
-							FileReader fileReader = new FileReader(file);
-							BufferedReader bufferedReader = new BufferedReader(fileReader);
-							StringBuffer stringBuffer = new StringBuffer();
-							String line;
-							superserver_locs=new LinkedList<String>();
-
-							while ((line = bufferedReader.readLine()) != null) {
-								
-								//Check and dont add the SS which is the same as self
-								superserver_locs.add(line);
-							}
-							fileReader.close();
-
-							System.out.println("Contents of file:"+superserver_locs);
-
-							//Got the list of all superserver.. Iterate and call them -- then implement more complicated logic
-							if(superserver_locs!=null && superserver_locs.size()>0) {
-								URL url_SS=null;
-								HttpURLConnection con_SS=null;
-								for (int i=0;i<superserver_locs.size();i++) {
-									//Iterating each of the superservers now
-									try {
-										String url_ss=superserver_locs.get(i);
-
-										if(!url_ss.contains(this.myURL)) {
-											url_ss+="?client=1";
-
-											//System.out.println("Using the url "+url_ss);
-											//Spawn new threads to execute the shoot requests to the 
-											
-											url_SS= new URL(url_ss);
-											con_SS=(HttpURLConnection)url_SS.openConnection();
-											con_SS.setRequestMethod("GET");
-
-											//Sends the message to the SS -- 
-											new Thread(new ExecuteWSThread(url_ss,this.addmessage,"add")).start();
-
-											InputStream isi = con_SS.getInputStream();
-											InputStreamReader isr = new InputStreamReader(isi);
-											BufferedReader in = new BufferedReader(isr);
-											String str;
-											StringBuilder sb = new StringBuilder();
-
-
-											while((str = in.readLine()) != null){
-												sb.append(str);
-												sb.append("\n");
-											}
-											//content.append(inputLine);
-											in.close();
-											isr.close();
-											isi.close();
-											con_SS.disconnect();
-
-											System.out.println("I got response from SS:"+sb.toString());
-											
-											// Storing the records for data usage
-											try {
-												FileOutputStream fos;
-												fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
-												ObjectOutputStream oos = new ObjectOutputStream(fos);
-												oos.writeObject("SS | Got a Response Back from  | " + url_ss + "| "+ serverAddress +" | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
-												oos.close();
-												
-											} catch (IOException e) {
-												e.printStackTrace();
-											}
-										}
-									} catch (MalformedURLException e) {
-										e.printStackTrace();
-									} catch (IOException e) {
-										e.printStackTrace();
-									}
-
-								}
-							}
-							
-						} catch (Exception e) {
-							// TODO: handle exception
-							System.out.println("Superserver list for client is an issue");
-							System.exit(0);
-						}
-
-					}					
-
 					try {
 						//3 this method will block the thread of latch untill its released later from thread#2
 						latch.await();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-
 				}
 				
 				//Waiting for more than half guys to respond and take a consensus and send that response back.
-				
-				
-			
-				
 				
 				System.out.println("My thread has completed and hence, I reach here. -- Maybe I reach here on first thread completion "+ws_response);
 				if(!this.responseFlag) {
@@ -518,12 +398,5 @@ public class AsyncRequestProcessor implements Runnable {
 		System.out.println("AsyncRequestProcesser, reqHASH"+(System.currentTimeMillis()-startingTime));
 	}
 
-	private void longProcessing(int secs) {
-		// wait for given time before finishing
-		try {
-			Thread.sleep(secs);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
+
 }
