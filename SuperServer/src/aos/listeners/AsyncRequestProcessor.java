@@ -37,7 +37,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.sun.jmx.snmp.Timestamp;
+
 
 import aos.common.ExecuteWSThread;
 import aos.common.WSDLContainer;
@@ -231,7 +231,20 @@ public class AsyncRequestProcessor implements Runnable {
 
 	@Override
 	public void run() {
-		long startTime= System.currentTimeMillis();
+		long startingTime= System.currentTimeMillis();
+		
+		
+		// Storing the records for data usage
+		try {
+			FileOutputStream fos;
+			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject("SS | Spawning thread to get process thread | " + startingTime +" | " +"processing Request");
+			oos.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		//In this one needs to spawn new threads 
 
 		System.out.println("Async Supported? "
@@ -239,6 +252,18 @@ public class AsyncRequestProcessor implements Runnable {
 
 
 		ArrayList<String> lowestServer = this.findLowestServerLoads();
+		// Storing the records for data usage
+		try {
+			FileOutputStream fos;
+			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject("SS | Found set of lowestServers | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
+			oos.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		// Get a response back from the server
 		if(lowestServer!=null) {
 			try {
@@ -247,6 +272,19 @@ public class AsyncRequestProcessor implements Runnable {
 					String serverAddress = returnIP(server);
 					//AsyncContext asyncContextObj = this.asyncContext.getRequest().startAsync();
 
+					// Storing the records for data usage
+					try {
+						FileOutputStream fos;
+						fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+						ObjectOutputStream oos = new ObjectOutputStream(fos);
+						oos.writeObject("SS | Sending Request to  | "+ serverAddress +" | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
+						oos.close();
+						
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					
+					
 					//This part needs to be handled -- Spawn a new thread and then capture the first response only
 					//Thread t= new Thread(new ExecuteWSThread(serverAddress,this.addmessage,"add"));
 					//t.start();
@@ -283,6 +321,18 @@ public class AsyncRequestProcessor implements Runnable {
 								}
 								rd.close();
 								System.out.println("OUTPUT "+response.toString());
+								
+								// Storing the records for data usage
+								try {
+									FileOutputStream fos;
+									fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+									ObjectOutputStream oos = new ObjectOutputStream(fos);
+									oos.writeObject("SS | Got Response from WS  | "+ serverAddress +" | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
+									oos.close();
+									
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
 								con.disconnect();
 
 							} catch (IOException e) {
@@ -313,8 +363,20 @@ public class AsyncRequestProcessor implements Runnable {
 						// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
 						
 						//This should come from web.xml -- 
-						String superserver_list="E:\\git\\AOS\\Try50\\SuperServerList.txt";
+						String superserver_list="..\\..\\..\\SuperServerList.txt";
 						LinkedList<String> superserver_locs=null;
+						
+						// Storing the records for data usage
+						try {
+							FileOutputStream fos;
+							fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+							ObjectOutputStream oos = new ObjectOutputStream(fos);
+							oos.writeObject("SS | Sending Request to other SS and WS | "+ serverAddress +" | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
+							oos.close();
+							
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 
 						try {
 							File file = new File(superserver_list);
@@ -373,6 +435,18 @@ public class AsyncRequestProcessor implements Runnable {
 											con_SS.disconnect();
 
 											System.out.println("I got response from SS:"+sb.toString());
+											
+											// Storing the records for data usage
+											try {
+												FileOutputStream fos;
+												fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+												ObjectOutputStream oos = new ObjectOutputStream(fos);
+												oos.writeObject("SS | Got a Response Back from  | " + url_ss + "| "+ serverAddress +" | " + (System.currentTimeMillis()-startingTime) +" | " +"processing Request");
+												oos.close();
+												
+											} catch (IOException e) {
+												e.printStackTrace();
+											}
 										}
 									} catch (MalformedURLException e) {
 										e.printStackTrace();
@@ -437,24 +511,11 @@ public class AsyncRequestProcessor implements Runnable {
 				e.printStackTrace();
 			}
 
-
-			// Make a call to the lowest server with the starting value
-			// TODO: how do you make SOAP calls given the URL?
-			// Set the result to what the server returns
 		}
 
-
-		//longProcessing(secs);
-		/*try {
-			PrintWriter out = asyncContext.getResponse().getWriter();
-			out.write("Processing done for " + secs + " milliseconds!!");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-		//complete the processing
 		asyncContext.complete();
 				
-		System.out.println("AsyncRequestProcesser, reqHASH"+(System.currentTimeMillis()-startTime));
+		System.out.println("AsyncRequestProcesser, reqHASH"+(System.currentTimeMillis()-startingTime));
 	}
 
 	private void longProcessing(int secs) {

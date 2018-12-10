@@ -50,6 +50,14 @@ public class Test {
 		}
 
 		
+		String test = "hello|world|how|are";
+		String[] chainParts = test.split("\\|");
+		for(int i = 0; i< chainParts.length; i+=2) {
+			String message = chainParts[i];
+			String time = chainParts[i+1];
+			System.out.println(message + time);
+		}
+		
 		Block inital  = new Block("test","0");
 		//System.out.println("first block" + inital.hash);
 		

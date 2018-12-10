@@ -48,8 +48,19 @@ public class ServerListener extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		this.ServerRecords.add("SERVER | Recieved from Server | " + (new Timestamp(System.currentTimeMillis())) +" | " + response);
-		
+		// Storing the records for data usage
+		long startingTime=System.currentTimeMillis();
+		try {
+			FileOutputStream fos;
+			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject("SS | Recieved Request From Server | " + startingTime +" | " + request);
+			oos.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+				
 		response.getWriter().append("Served at: ").append(request.getContextPath());
 		System.out.println("I get an incoming request from server -- need to extract the WSDL and save it");
 		response.setContentType("text/html;charset=UTF-8");
@@ -58,6 +69,16 @@ public class ServerListener extends HttpServlet {
 		
 		//Save this somewhere and persist it somewhere
 		response.getWriter().write("SUCCESS");
+		try {
+			FileOutputStream fos;
+			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject("SS | Saved data from server | " + (System.currentTimeMillis()-startingTime) +" | " + request);
+			oos.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 	}
 
@@ -71,29 +92,7 @@ public class ServerListener extends HttpServlet {
 
 	@Override
 	public void destroy() {
-		// write object to file
-		FileOutputStream fos;
-		try {
-			fos = new FileOutputStream(this.wsdl_register);
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(this.wsdlConObjLocal);
-			oos.close();
-			
-			// Do i need to flush? 
-
-			fos = new FileOutputStream("E:\\git\\AOS\\SuperServer\\ServerRecords.txt");
-			oos = new ObjectOutputStream(fos);
-			Iterator<String> iter = this.ServerRecords.iterator();
-			while(iter.hasNext())
-				oos.writeObject(iter.next());
-			oos.close();
-		
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-	
+		// write object to file	
 	}
 	
 	@Override
