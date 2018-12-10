@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.net.*;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
@@ -37,11 +38,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.sun.jmx.snmp.Timestamp;
-
-import aos.common.ExecuteWSThread;
 import aos.common.WSDLContainer;
-import sun.net.www.protocol.http.HttpURLConnection;
 
 public class AsyncRequestProcessor implements Runnable {
 
@@ -70,19 +67,6 @@ public class AsyncRequestProcessor implements Runnable {
 		this.serverRequestType=serverRequestType;
 		
 		// https://stackoverflow.com/questions/9481865/getting-the-ip-address-of-the-current-machine-using-java
-				try(final DatagramSocket socket = new DatagramSocket())
-				{
-					socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
-					this.myURL = socket.getLocalAddress().getHostAddress();
-					System.out.println("What is my URL in the constructor "+this.myURL);
-					
-				} catch (UnknownHostException e) {
-					System.out.println("There is something wrong with my configuration");
-					e.printStackTrace();
-				} catch (SocketException e1) {
-					System.out.println("could not create a new datagram socket");
-					e1.printStackTrace();
-				}
 	}
 
 	public String returnIP(String wsdl) throws ParserConfigurationException, MalformedURLException, SAXException, IOException {
@@ -225,6 +209,8 @@ public class AsyncRequestProcessor implements Runnable {
 			else 
 				return sortedLoads;*/
 		}
+		
+		System.out.println("This is the return list "+toReturn);
 		return toReturn;
 
 	}
@@ -240,7 +226,6 @@ public class AsyncRequestProcessor implements Runnable {
 
 
 		ArrayList<String> lowestServer = this.findLowestServerLoads();
-		System.out.println("Found lowest guys "+lowestServer.size());
 		// Get a response back from the server
 		if(lowestServer!=null) {
 			try {
@@ -309,88 +294,7 @@ public class AsyncRequestProcessor implements Runnable {
 					//I would need to spawn threads for Calling the other SS and then wait for the first guy
 					
 					// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
-					if(this.serverRequestType == 5) {
-
-						// TODO: create the list of SS change location of 
-						// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
-						
-						//This should come from web.xml -- 
-						String superserver_list="E:\\git\\AOS\\Try50\\SuperServerList.txt";
-						LinkedList<String> superserver_locs=null;
-
-						try {
-							File file = new File(superserver_list);
-							FileReader fileReader = new FileReader(file);
-							BufferedReader bufferedReader = new BufferedReader(fileReader);
-							StringBuffer stringBuffer = new StringBuffer();
-							String line;
-							superserver_locs=new LinkedList<String>();
-
-							while ((line = bufferedReader.readLine()) != null) {
-								
-								//Check and dont add the SS which is the same as self
-								superserver_locs.add(line);
-							}
-							fileReader.close();
-
-							System.out.println("Contents of file:"+superserver_locs);
-
-							//Got the list of all superserver.. Iterate and call them -- then implement more complicated logic
-							if(superserver_locs!=null && superserver_locs.size()>0) {
-								URL url_SS=null;
-								HttpURLConnection con_SS=null;
-								for (int i=0;i<superserver_locs.size();i++) {
-									//Iterating each of the superservers now
-									try {
-										String url_ss=superserver_locs.get(i);
-
-										if(!url_ss.contains(this.myURL)) {
-											url_ss+="?client=1";
-
-											//System.out.println("Using the url "+url_ss);
-											//Spawn new threads to execute the shoot requests to the 
-											
-											url_SS= new URL(url_ss);
-											con_SS=(HttpURLConnection)url_SS.openConnection();
-											con_SS.setRequestMethod("GET");
-
-											//Sends the message to the SS -- 
-											new Thread(new ExecuteWSThread(url_ss,this.addmessage,"add")).start();
-
-											InputStream isi = con_SS.getInputStream();
-											InputStreamReader isr = new InputStreamReader(isi);
-											BufferedReader in = new BufferedReader(isr);
-											String str;
-											StringBuilder sb = new StringBuilder();
-
-											while((str = in.readLine()) != null){
-												sb.append(str);
-												sb.append("\n");
-											}
-											//content.append(inputLine);
-											in.close();
-											isr.close();
-											isi.close();
-											con_SS.disconnect();
-
-											System.out.println("I got response from SS:"+sb.toString());
-										}
-									} catch (MalformedURLException e) {
-										e.printStackTrace();
-									} catch (IOException e) {
-										e.printStackTrace();
-									}
-
-								}
-							}
-							
-						} catch (Exception e) {
-							// TODO: handle exception
-							System.out.println("Superserver list for client is an issue");
-							System.exit(0);
-						}
-
-					}					
+				
 
 					try {
 						//3 this method will block the thread of latch untill its released later from thread#2
@@ -453,12 +357,5 @@ public class AsyncRequestProcessor implements Runnable {
 		System.out.println("AsyncRequestProcesser, reqHASH"+(System.currentTimeMillis()-startTime));
 	}
 
-	private void longProcessing(int secs) {
-		// wait for given time before finishing
-		try {
-			Thread.sleep(secs);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
+
 }

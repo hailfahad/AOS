@@ -12,20 +12,17 @@ public class WSDLContainer implements Serializable{
 	private static final long serialVersionUID = 5441040525275235593L;
 	private ArrayList<String> wsdl_table; // TODO: is this WSDL - Load
 	
-	private static WSDLContainer wsdlContainerObj=null;
+	private static final WSDLContainer wsdlContainerObj=new WSDLContainer();
 	
 	// Constructor for a new WSDLContainer
 	private WSDLContainer() {
 		//if(wsdl_table == null) {
-			wsdl_table=new ArrayList();	
 		//}
 	}
 	
 	// Returns the entire container
 	public static WSDLContainer getInstance() {
-		if(wsdlContainerObj==null) {
-			wsdlContainerObj=new WSDLContainer();
-		}
+		
 		System.out.println("calling the getinstance "+wsdlContainerObj.wsdl_table);
 		return wsdlContainerObj;
 		
@@ -38,6 +35,9 @@ public class WSDLContainer implements Serializable{
 		//if(this.wsdl_table.containsKey(arg1)) {
 		//	this.wsdl_table.put(arg1, this.wsdl_table.get(arg1));
 		//}else {
+		if(this.wsdl_table==null) {
+			this.wsdl_table=new ArrayList();
+		}
 			this.wsdl_table.add(arg1);
 		//}
 		System.out.println("This is the table "+this.wsdl_table);
@@ -50,6 +50,9 @@ public class WSDLContainer implements Serializable{
 	
 	//  Returns the map to be referenced
 	public ArrayList getAll() {
+		if(this.wsdl_table==null) {
+			this.wsdl_table=new ArrayList();
+		}
 		return this.wsdl_table;
 	}
 }

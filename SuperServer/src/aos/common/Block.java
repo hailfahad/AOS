@@ -2,7 +2,7 @@ package aos.common;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import com.sun.jmx.snmp.Timestamp;
+
 
 public class Block {
 	
@@ -12,7 +12,7 @@ public class Block {
 	
 	private String message;
 	
-	private Timestamp timestamp;
+	private long timestamp;
 	
 	private int nonce;
 	
@@ -22,7 +22,7 @@ public class Block {
 			
 			this.previousHash = previousHash;
 			
-			this.timestamp = new Timestamp(System.currentTimeMillis());
+			this.timestamp = System.currentTimeMillis();
 			
 			this.hash = getHash();
 			

@@ -17,8 +17,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.sun.jmx.snmp.Timestamp;
-
 import aos.common.WSDLContainer;
 
 /**
@@ -29,7 +27,7 @@ public class ServerListener extends HttpServlet {
 	private static final long serialVersionUID = 1L;
     
 	private String wsdl_register;
-	public static WSDLContainer wsdlConObjLocal=null;
+	public WSDLContainer wsdlConObjLocal=null;
 	public ArrayList<String> ServerRecords;
 	
     /**
@@ -40,7 +38,7 @@ public class ServerListener extends HttpServlet {
         super();
         // TODO Auto-generated constructor stub       
         //this.wsdlConObjLocal = new WSDLContainer();
-        this.ServerRecords = new ArrayList<String>();
+        //this.ServerRecords = new ArrayList<String>();
     }
 
 	/**
@@ -48,7 +46,7 @@ public class ServerListener extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		this.ServerRecords.add("SERVER | Recieved from Server | " + (new Timestamp(System.currentTimeMillis())) +" | " + response);
+		//this.ServerRecords.add("SERVER | Recieved from Server | " + (System.currentTimeMillis()) +" | " + response);
 		
 		response.getWriter().append("Served at: ").append(request.getContextPath());
 		System.out.println("I get an incoming request from server -- need to extract the WSDL and save it");
@@ -79,17 +77,6 @@ public class ServerListener extends HttpServlet {
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(this.wsdlConObjLocal);
 			oos.close();
-			
-			// Do i need to flush? 
-
-			fos = new FileOutputStream("E:\\git\\AOS\\SuperServer\\ServerRecords.txt");
-			oos = new ObjectOutputStream(fos);
-			Iterator<String> iter = this.ServerRecords.iterator();
-			while(iter.hasNext())
-				oos.writeObject(iter.next());
-			oos.close();
-		
-			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -107,8 +94,10 @@ public class ServerListener extends HttpServlet {
 			fis = new FileInputStream(this.wsdl_register);
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			this.wsdlConObjLocal = (WSDLContainer) ois.readObject();
+			System.out.println("this is the table "+this.wsdlConObjLocal.getAll().size());
 			ois.close();
 		} catch (IOException | ClassNotFoundException e) {
+			System.out.println("Error ");
 			this.wsdlConObjLocal = WSDLContainer.getInstance();
 			//e.printStackTrace();
 		}
