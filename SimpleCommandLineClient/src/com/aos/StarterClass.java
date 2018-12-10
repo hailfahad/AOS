@@ -40,8 +40,10 @@ public class StarterClass {
 		//Client starts from here.. it will take input of a file which will contain the list of superservers which Client knows about..
 		//These could be one or many..
 		//Trial for calling the WS from java which is to be put into the SS code:
-		
-		for(int i=0;i<5;i++) {
+		/*int retVal= ThreadLocalRandom.current().nextInt(0,1);
+		System.out.println(retVal);
+		System.exit(1);*/
+		for(int i=0;i<1;i++) {
 			StarterClass stObj = new StarterClass();
 			//stObj.doClientThing();
 			new Thread(new Runnable() {
@@ -67,8 +69,7 @@ public class StarterClass {
 						System.out.println("Contents of file:"+superserver_locs);
 						
 					} catch (Exception e) {
-						// TODO: handle exception
-						System.out.println("Superserver list for client is an issue");
+						//System.out.println("Superserver list for client is an issue");
 						System.exit(0);
 					}
 
@@ -88,7 +89,7 @@ public class StarterClass {
 								String url_ss=superserver_locs.get(randomNum);
 								url_ss+="?client=1";
 								
-								//System.out.println("Using the url "+url_ss);
+								System.out.println("Using the url "+url_ss);
 								url= new URL(url_ss);
 								con=(HttpURLConnection)url.openConnection();
 								con.setRequestMethod("GET");
