@@ -10,8 +10,8 @@
     <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
   <context-param>
-  <param-name>logFile</param-name>
-  <param-value>/home/siddiqui/aos/ws_logs.txt</param-value>
+    <param-name>logFile</param-name>
+    <param-value>/home/siddiqui/aos/ws_logs.txt</param-value>
   </context-param>
   <servlet>
     <description>Does stuff on container startup</description>

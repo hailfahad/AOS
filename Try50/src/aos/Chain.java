@@ -10,7 +10,7 @@ public class Chain {
 	int strength;	
 	private static Chain myChainObj = null;
 
-	public Chain() {
+	private Chain() {
 		
 		this.chain = new ArrayList<Block>();
 	}
@@ -63,14 +63,17 @@ public class Chain {
 	}
 	
 	// Given a new chain to replace with, regenerate the chain and set as current chain
-	public Boolean updateChain(String newChain) {
+	public boolean updateChain(String newChain) {
 	
 		String[] chainParts = newChain.split("\\|");
 		ArrayList<Block> chainList = new ArrayList<Block>();
 		Block prev = null;
 		for(int i = 0; i< chainParts.length; i+=2) {
+			System.out.println("chainPArt "+chainParts);
 			String message = chainParts[i];
+			System.out.println("messg a "+message);
 			long time = Long.parseLong(chainParts[i+1]);
+			System.out.println("time "+time);
 			if(i == 0) { // initial Hash
 				Block currBlock = new Block(message, "0", time);
 				prev = currBlock;
@@ -86,7 +89,6 @@ public class Chain {
 			return true;
 		}
 		return false;
-		
-
+	
 	}
 }

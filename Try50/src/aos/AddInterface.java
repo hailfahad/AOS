@@ -1,6 +1,8 @@
 package aos;
 
 public interface AddInterface {
-	public int add();
+	public String add();
 	public int myload();
+	//public String toss();
+	public void updateChain(String update);
 }

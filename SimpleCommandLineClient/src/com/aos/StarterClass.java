@@ -2,8 +2,6 @@ package com.aos;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -14,29 +12,9 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.soap.MessageFactory;
-import javax.xml.soap.MimeHeaders;
-import javax.xml.soap.SOAPBody;
-import javax.xml.soap.SOAPConnection;
-import javax.xml.soap.SOAPConnectionFactory;
-import javax.xml.soap.SOAPElement;
-import javax.xml.soap.SOAPEnvelope;
-import javax.xml.soap.SOAPException;
-import javax.xml.soap.SOAPMessage;
-import javax.xml.soap.SOAPPart;
-import javax.xml.ws.soap.SOAPFaultException;
-
-import com.eviware.soapui.impl.wsdl.WsdlInterface;
-import com.eviware.soapui.impl.wsdl.WsdlOperation;
-import com.eviware.soapui.impl.wsdl.WsdlProject;
-import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlImporter;
-import com.eviware.soapui.model.iface.Operation;
 
 
 public class StarterClass {
@@ -121,7 +99,7 @@ public class StarterClass {
 								url= new URL(url_ss);
 								con=(HttpURLConnection)url.openConnection();
 								con.setRequestMethod("GET");
-								con.setConnectTimeout(5*60*1000);
+								con.setConnectTimeout(5*60*10000);
 								InputStream isi = con.getInputStream();
 					            InputStreamReader isr = new InputStreamReader(isi);
 					            BufferedReader in = new BufferedReader(isr);
@@ -145,7 +123,6 @@ public class StarterClass {
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
-							
 						//}
 					}
 					msg="SS,StarterClass,end,"+System.currentTimeMillis()+","+stObj.counter;

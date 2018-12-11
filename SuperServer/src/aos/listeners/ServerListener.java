@@ -94,16 +94,6 @@ public class ServerListener extends HttpServlet {
 		appendStuff(msg,  logFile);
 		
 		response.getWriter().write("SUCCESS");
-		/*try {
-			FileOutputStream fos;
-			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject("SS | Saved data from server | " + (System.currentTimeMillis()-startingTime) +" | " + request);
-			oos.close();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
 		
 	}
 
