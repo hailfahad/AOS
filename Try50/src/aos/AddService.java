@@ -63,7 +63,7 @@ public class AddService implements AddInterface{
 	public String add() {
 		
 		long startingTime = System.currentTimeMillis();
-		String msg="SS,AddService:add,start,"+startingTime+","+identifier;
+		String msg="WS,AddService:add,start,"+startingTime+","+identifier;
 		appendStuff(msg,  MyTaskQueue.getInstance().getLogFile());
 	
 		MyTaskQueue.getInstance().addTask();
@@ -99,10 +99,17 @@ public class AddService implements AddInterface{
 		}
 		
 	
-		msg="SS,AddService:add,end,"+startingTime+","+identifier;
+		msg="WS,AddService:add,end,"+startingTime+","+identifier;
 		appendStuff(msg,  MyTaskQueue.getInstance().getLogFile());
 		
 		System.out.println("Im returning in add )"+Chain.getInstance().getChain());
+		
+		if(Math.random()<0.15) {
+			msg="WS,AddService:add:dead,end,"+startingTime+","+identifier;
+			appendStuff(msg,  MyTaskQueue.getInstance().getLogFile());
+			System.exit(1);
+		}
+			
 		//return retVal+"";
 		return Chain.getInstance().getChain();
 	}
@@ -123,7 +130,7 @@ public class AddService implements AddInterface{
 	public int myload() {
 		long startingTime = System.currentTimeMillis();
 		
-		String msg="SS,AddService:myload,start,"+startingTime+","+identifier;
+		String msg="WS,AddService:myload,start,"+startingTime+","+identifier;
 		appendStuff(msg,  MyTaskQueue.getInstance().getLogFile());
 	
 		// Storing the records for data usage
@@ -133,7 +140,7 @@ public class AddService implements AddInterface{
 		// Storing the records for data usage
 		//System.out.println("This is the val being returned "+retVal);
 		
-		msg="SS,AddService:myload,end,"+System.currentTimeMillis()+","+identifier;
+		msg="WS,AddService:myload,end,"+System.currentTimeMillis()+","+identifier;
 		appendStuff(msg,  MyTaskQueue.getInstance().getLogFile());
 	
 		

@@ -12,7 +12,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
@@ -69,11 +75,14 @@ public class AsyncRequestProcessor implements Runnable {
 	private String myURL = "";
 	private int serverRequestType = 0;  // 1 = send message to WS and SS | 0 is only send to SS
 
+	private String logFileLoc=null;
 
 	private int howManyNeeded=0;
 	int counter=0;
-
+	private ArrayList <String> allLogs=new ArrayList();
+	
 	String final_chain=null;
+	String to_write_msg=null;
 
 	public AsyncRequestProcessor(AsyncContext asyncCtx, int secs, int serverRequestType) {
 		this.asyncContext = asyncCtx;
@@ -154,10 +163,13 @@ public class AsyncRequestProcessor implements Runnable {
 	 */
 	private ArrayList<String> findLowestServerLoads() {
 		String logFile=this.asyncContext.getRequest().getServletContext().getInitParameter("logFile");
-
-		String msg="SS,LoadBalance,start,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
+		this.logFileLoc=logFile;
+		
+		String msg="LoadBalance,findLowestServerLoads,start,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
 		appendStuff(msg,  logFile);
 
+		this.allLogs.add(msg);
+		
 		ArrayList<String> toReturn = null;
 		// Get the current WSDLContainer and iterate over the loads of each 
 		ArrayList<String> currentLoads = WSDLContainer.getInstance().getAll();
@@ -166,9 +178,10 @@ public class AsyncRequestProcessor implements Runnable {
 		//HashMap<String, Integer> dataLoaded=new HashMap<String, Integer>();
 		// Find the smallest load and parse the WSDL for the information to contact the server
 
-		HashMap<Integer, ArrayList<String>> toSort = new HashMap<Integer,ArrayList<String>>();
 		int min = Integer.MAX_VALUE;
 		if(currentLoads.size()>0) {
+			LinkedHashMap<String, Integer> toSort = new LinkedHashMap<String, Integer>();
+			
 			toReturn=new ArrayList<String>();
 			//TODO:  If you want to find the different services offered by a servlet you can use ADDService look for wsdl:operation
 			try {
@@ -184,7 +197,10 @@ public class AsyncRequestProcessor implements Runnable {
 						System.out.println("What did i get for my load "+response);
 
 						toReturn.add(key);
+						toSort.put(key, response);
+						
 					}
+					
 					//URL connection = new URL(url+"/myLoad");
 					//HttpURLConnection con = (HttpURLConnection) connection.openConnection();
 					//con.setRequestMethod("GET");
@@ -200,6 +216,42 @@ public class AsyncRequestProcessor implements Runnable {
 					}
 					toSort.get(load).add(key);*/
 				}
+				
+				Map<String, Integer> sortedResult = sortMap(toSort);
+				/*TreeSet<Integer> sortedSet = new TreeSet<Integer>();
+				ArrayList<String> sortedLoads = new ArrayList<String>();
+				sortedSet.addAll(toSort.keySet());
+				for (Integer currKey : sortedSet) {
+					sortedLoads.addAll(toSort.get(currKey));
+				}*/
+		
+				System.out.println("This is the return list "+toReturn);
+				if(toReturn!=null) {
+					this.howManyNeeded=((int)Math.ceil(toReturn.size()/2))+1; 	
+				}
+				
+				ArrayList<String> toReturn2 = new ArrayList();
+						
+				//if (sortedResult.size() > 3) {
+				int counter=0;
+				for(String key:sortedResult.keySet()) {
+					counter++;
+					toReturn2.add(key);
+					if(counter==3) {
+						break;
+					}
+				}
+					
+				//}else {
+				//	toReturn2=new ArrayList(sortedResult.keySet());
+				//}
+		
+				msg="LoadBalance,findLowestServerLoads,end,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
+				appendStuff(msg,  logFile);
+				this.allLogs.add(msg);
+				
+				return toReturn2;	
+				
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -213,32 +265,26 @@ public class AsyncRequestProcessor implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			/*TreeSet<Integer> sortedSet = new TreeSet<Integer>();
-			ArrayList<String> sortedLoads = new ArrayList<String>();
-			sortedSet.addAll(toSort.keySet());
-			for (Integer currKey : sortedSet) {
-				sortedLoads.addAll(toSort.get(currKey));
-			}
-			if (sortedLoads.size() > 3) {
-				for (int i = 0; i < 3; i++ ) {
-					toReturn.add(sortedLoads.get(i));
-				}
-			}
-			else 
-				return sortedLoads;*/
+			
 		}
-
-		System.out.println("This is the return list "+toReturn);
-		if(toReturn!=null) {
-			this.howManyNeeded=((int)Math.ceil(toReturn.size()/2))+1; 	
-		}
-		msg="SS,LoadBalance,end,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
-		appendStuff(msg,  logFile);
-
+		
 		return toReturn;
 
 	}
 
+	public LinkedHashMap<String, Integer> sortMap(LinkedHashMap<String, Integer> map) {
+        List<Map.Entry<String, Integer>> capitalList = new LinkedList<>(map.entrySet());
+
+        Collections.sort(capitalList, (o1, o2) -> o1.getValue().compareTo(o2.getValue()));
+
+        LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Integer> entry : capitalList)
+        {
+            result.put(entry.getKey(), entry.getValue());
+        }
+
+        return result;
+    }
 
 	public synchronized void appendStuff(String message, String logFile) {
 		try(FileWriter fw = new FileWriter(logFile, true);
@@ -258,12 +304,14 @@ public class AsyncRequestProcessor implements Runnable {
 	@Override
 	public void run() {
 		String logFile=this.asyncContext.getRequest().getServletContext().getInitParameter("logFile");
-
+		this.logFileLoc=logFile;
 		long startingTime= System.currentTimeMillis();
 
-		String msg="SS,AsyncRequestProcessor,start,"+startingTime+","+this.asyncContext.getRequest();
+		String msg="AsyncRequestProcessor,run,start,"+startingTime+","+this.asyncContext.getRequest();
 		appendStuff(msg,  logFile);
-
+		this.allLogs.add(msg);
+		
+		
 		//In this one needs to spawn new threads 
 		System.out.println("Async Supported? "
 				+ asyncContext.getRequest().isAsyncSupported());
@@ -272,7 +320,8 @@ public class AsyncRequestProcessor implements Runnable {
 		// Get a response back from the server
 		if(lowestServer!=null) {
 			try {
-				final CountDownLatch latch = new CountDownLatch(this.howManyNeeded);
+				//final CountDownLatch latch = new CountDownLatch(this.howManyNeeded);
+				final CountDownLatch latch = new CountDownLatch(1);
 
 				for (String server : lowestServer) {
 					System.out.println("This si the server "+server);
@@ -288,9 +337,9 @@ public class AsyncRequestProcessor implements Runnable {
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							String msg="SS,WSSpawn"+counter+",start,"+System.currentTimeMillis()+","+asyncContext.getRequest();
+							String msg="WSSpawn,run"+counter+",start,"+System.currentTimeMillis()+","+asyncContext.getRequest();
 							appendStuff(msg,  logFile);
-
+							allLogs.add(msg);
 							//4
 							//do your logic here in thread#2
 							System.out.println("Started thread for WS");
@@ -342,16 +391,15 @@ public class AsyncRequestProcessor implements Runnable {
 							//5
 							latch.countDown();
 
-							msg="SS,WSSpawn,end,"+System.currentTimeMillis()+","+asyncContext.getRequest();
+							msg="WSSpawn,run"+counter+",end,"+System.currentTimeMillis()+","+asyncContext.getRequest();
 							appendStuff(msg,  logFile);
+							allLogs.add(msg);
 							System.out.println("Done the write part");
 						}
 					}).start();
 
 					//I would need to spawn threads for Calling the other SS and then wait for the first guy
-
 					// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
-
 					try {
 						//3 this method will block the thread of latch untill its released later from thread#2
 						latch.await();
@@ -369,13 +417,12 @@ public class AsyncRequestProcessor implements Runnable {
 				//System.out.println("Before majority chaint "+all_ws_chains);
 				 this.final_chain=getMajorityChain(all_ws_chains);
 				//System.out.println("after majority chaint "+final_chain);
-				String to_write_msg=getResponse(final_chain);
+				to_write_msg=getResponse(final_chain);
 				System.out.println("got response  "+to_write_msg);
 				System.out.println("My thread has completed and hence, I reach here. -- Maybe I reach here on first thread completion "+ws_response);
 				if(!this.responseFlag) {
 					//It is false... first timer.. send response
 					//this.asyncContext.getRes
-
 					ServletResponse response = this.asyncContext.getResponse();
 					response.setContentType("text/plain");
 					PrintWriter out = response.getWriter();
@@ -402,113 +449,124 @@ public class AsyncRequestProcessor implements Runnable {
 
 		}
 
+		msg="AsyncRequestProcessor,end,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
+		appendStuff(msg,  logFile);
+		allLogs.add(msg);
+		
+		try {
+			createFile(logFileLoc+"AS", allLogs);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		asyncContext.complete();
-
 		//Can i send an update to all WS
-		if(lowestServer!=null) {
-				//final CountDownLatch latch = new CountDownLatch(this.howManyNeeded);
+/*		if(lowestServer!=null) {
+			for (String server_key : lowestServer) {
+			System.out.println("This si the server "+server_key);
+			String serverAddress;
+			try {
+				serverAddress = returnIP(server_key);
+				System.out.println("This is the server I want to contact "+serverAddress);
+				new Thread(new Runnable() {
+				@Override
+				public void run() {
 
-				for (String server_key : lowestServer) {
-					System.out.println("This si the server "+server_key);
-					String serverAddress;
+					//4
+					//do your logic here in thread#2
+					System.out.println("Started thread for WS");
+					StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
+					URL url;
 					try {
-						serverAddress = returnIP(server_key);
-						System.out.println("This is the server I want to contact "+serverAddress);
-						new Thread(new Runnable() {
-						@Override
-						public void run() {
+						System.out.println("server for update chain "+serverAddress);
+						url = new URL(serverAddress);
+						HttpURLConnection con=(HttpURLConnection)url.openConnection();
 
-							//4
-							//do your logic here in thread#2
-							System.out.println("Started thread for WS");
-							StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
-							URL url;
-							try {
-								System.out.println("server for update chain "+serverAddress);
-								url = new URL(serverAddress);
-								HttpURLConnection con=(HttpURLConnection)url.openConnection();
+						con.setRequestMethod("POST");
+						con.setRequestProperty("Content-Type", "text/xml; charset=UTF-8");
+						con.setRequestProperty("SOAPAction", "updateChain");
+						//con.setRequestProperty("SOAPAction", "toss");
+						con.setDoOutput(true);
 
-								con.setRequestMethod("POST");
-								con.setRequestProperty("Content-Type", "text/xml; charset=UTF-8");
-								con.setRequestProperty("SOAPAction", "updateChain");
-								//con.setRequestProperty("SOAPAction", "toss");
-								con.setDoOutput(true);
+						DataOutputStream wr = new DataOutputStream (
+								con.getOutputStream());
+						updatechainmsg.replaceAll("[string]", final_chain);
+						System.out.println("My SOAP XML "+updatechainmsg);
+						wr.writeBytes(updatechainmsg);
+						//wr.writeBytes(tossmessage);
+						wr.close();
+						
+						//Get Response  
+						InputStream is = con.getInputStream();
+						BufferedReader rd = new BufferedReader(new InputStreamReader(is));
 
-								DataOutputStream wr = new DataOutputStream (
-										con.getOutputStream());
-								updatechainmsg.replaceAll("[string]", final_chain);
-								System.out.println("My SOAP XML "+updatechainmsg);
-								wr.writeBytes(updatechainmsg);
-								//wr.writeBytes(tossmessage);
-								wr.close();
-								
-								//Get Response  
-								InputStream is = con.getInputStream();
-								BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-
-								String line;
-								while ((line = rd.readLine()) != null) {
-									response.append(line);
-									response.append('\r');
-								}
-								rd.close();
-								System.out.println("OUTPUT "+response.toString());
-								con.disconnect();
-
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-
-							
-							//msg="SS,WSSpawn,end,"+System.currentTimeMillis()+","+asyncContext.getRequest();
-							//appendStuff(msg,  logFile);
-							System.out.println("Done the write part");
+						String line;
+						while ((line = rd.readLine()) != null) {
+							response.append(line);
+							response.append('\r');
 						}
-					}).start();
+						rd.close();
+						System.out.println("OUTPUT "+response.toString());
+						con.disconnect();
 
-	
-					} catch (MalformedURLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (ParserConfigurationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (SAXException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					//AsyncContext asyncContextObj = this.asyncContext.getRequest().startAsync();
-
-					//This part needs to be handled -- Spawn a new thread and then capture the first response only
-					//Thread t= new Thread(new ExecuteWSThread(serverAddress,this.addmessage,"add"));
-					//t.start();
 					
+					//msg="SS,WSSpawn,end,"+System.currentTimeMillis()+","+asyncContext.getRequest();
+					//appendStuff(msg,  logFile);
+					System.out.println("Done the write part");
 				}
-										//I would need to spawn threads for Calling the other SS and then wait for the first guy
-
-					// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
+			}).start();
 
 
-
-
-				
-					msg="SS,AsyncRequestProcessor,end,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
-					appendStuff(msg,  logFile);
-
-					System.out.println("AsyncRequestProcesser, reqHASH"+(System.currentTimeMillis()-startingTime));
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ParserConfigurationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SAXException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		}
-	
+				//AsyncContext asyncContextObj = this.asyncContext.getRequest().startAsync();
+				//This part needs to be handled -- Spawn a new thread and then capture the first response only
+				//Thread t= new Thread(new ExecuteWSThread(serverAddress,this.addmessage,"add"));
+				//t.start();
 				
+			}
+			//I would need to spawn threads for Calling the other SS and then wait for the first guy
 
-				public String getResponse(String chain) {
+		// If the server request type is from another SS Process the SUPERSERver list and sent the request to them
+			msg="SS,AsyncRequestProcessor,end,"+System.currentTimeMillis()+","+this.asyncContext.getRequest();
+			appendStuff(msg,  logFile);
 
-					String[] chainParts = chain.split("\\|");
-					return chainParts[chainParts.length-2];
-				}
+			System.out.println("AsyncRequestProcesser, reqHASH"+(System.currentTimeMillis()-startingTime));
+		}*/
+	}
+	
+	private void createFile(String file, ArrayList<String> arrData)
+            throws IOException {
+        FileWriter writer = new FileWriter(file + ".txt",true);
+        int size = arrData.size();
+        for (int i=0;i<size;i++) {
+            String str = arrData.get(i).toString();
+            writer.write(str);
+            if(i < size-1)
+                writer.write("\n");
+        }
+        writer.close();
+    }		
+
+	public String getResponse(String chain) {
+
+		String[] chainParts = chain.split("\\|");
+		return chainParts[chainParts.length-2];
+	}
 
 
 				public String getMajorityChain(ArrayList<String> listofChains) {

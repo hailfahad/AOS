@@ -37,6 +37,7 @@ import java.net.*;
 public class ClientListener extends HttpServlet {
 	public ArrayList<String> ClientRecords;
 	
+	private String logFileLoc=null;
 
 	private String myURL = "";
 
@@ -64,22 +65,11 @@ public class ClientListener extends HttpServlet {
 		// Storing the records for data usage
 		String logFile=request.getServletContext().getInitParameter("logFile");
 		
+		this.logFileLoc=logFile;
 		long startTime=System.currentTimeMillis();
-		String msg="SS,ClientListener,start,"+startTime+","+request;
+		String msg="ClientListener,doGet,start,"+startTime+","+request;
 		appendStuff(msg,  logFile);
-		
-		/*try {
-			FileOutputStream fos;
-			fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject("SS | Recieved Request From Client | " + startTime +" | " +"processing Request");
-			oos.close();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-
-
+		ClientRecords.add(msg);
 		
 		request.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", true);
 		// Value that the client wants a number to be added to
@@ -132,83 +122,79 @@ public class ClientListener extends HttpServlet {
 			new AsyncRequestProcessor(asyncCtx, 5*60*1000,Integer.parseInt(client_code)).run();
 			//Spawn threads for SS here itself
 			// String superserver_list="/home/siddiqui/aos/ws_resolvers.txt";
-				
+					
+			//Got the list of all superserver.. Iterate and call them -- then implement more complicated logic
+			/*if(superserver_locs!=null && superserver_locs.size()>0) {
+				final CountDownLatch latch = new CountDownLatch(superserver_locs.size()-1);
+
+				for (int i=0;i<superserver_locs.size();i++) {
+					//Iterating each of the superservers now
+						String url_ss=superserver_locs.get(i);
+						//if(!url_ss.contains(this.myURL)) {
+							//url_ss+="?client=0";
+						
+							System.out.println("Using the url FOR SS  "+url_ss);
 							
-				
-			
-				
-				//Got the list of all superserver.. Iterate and call them -- then implement more complicated logic
-				/*if(superserver_locs!=null && superserver_locs.size()>0) {
-					final CountDownLatch latch = new CountDownLatch(superserver_locs.size()-1);
-
-					for (int i=0;i<superserver_locs.size();i++) {
-						//Iterating each of the superservers now
-							String url_ss=superserver_locs.get(i);
-							//if(!url_ss.contains(this.myURL)) {
-								//url_ss+="?client=0";
-							
-								System.out.println("Using the url FOR SS  "+url_ss);
-								
-								new Thread(new Runnable() {
-									@Override
-									public void run() {
-										try {
-										URL url_SS=null;
-										HttpURLConnection con_SS=null;
-											
-										url_SS= new URL(url_ss);
-										con_SS=(HttpURLConnection)url_SS.openConnection();
-										con_SS.setRequestMethod("GET");
-										//Sends the message to the SS -- 
-										//new Thread(new ExecuteWSThread(url_ss,this.addmessage,"add")).start();
-										System.out.println("Am i blocking ");
+							new Thread(new Runnable() {
+								@Override
+								public void run() {
+									try {
+									URL url_SS=null;
+									HttpURLConnection con_SS=null;
 										
-										//response.getOutputStream();
-										InputStream isi = con_SS.getInputStream();
-										InputStreamReader isr = new InputStreamReader(isi);
-										BufferedReader in = new BufferedReader(isr);
-										String str;
-										StringBuilder sb = new StringBuilder();
+									url_SS= new URL(url_ss);
+									con_SS=(HttpURLConnection)url_SS.openConnection();
+									con_SS.setRequestMethod("GET");
+									//Sends the message to the SS -- 
+									//new Thread(new ExecuteWSThread(url_ss,this.addmessage,"add")).start();
+									System.out.println("Am i blocking ");
+									
+									//response.getOutputStream();
+									InputStream isi = con_SS.getInputStream();
+									InputStreamReader isr = new InputStreamReader(isi);
+									BufferedReader in = new BufferedReader(isr);
+									String str;
+									StringBuilder sb = new StringBuilder();
 
-										while((str = in.readLine()) != null){
-											sb.append(str);
-											sb.append("\n");
-										}
-										//content.append(inputLine);
-										in.close();
-										isr.close();
-										isi.close();
-										con_SS.disconnect();
-										System.out.println("I Completed connection to SS in a thread :"+sb.toString());
-
-										latch.countDown();
-										} catch (MalformedURLException e) {
-											e.printStackTrace();
-										} catch (IOException e) {
-											e.printStackTrace();
-										}
-										
+									while((str = in.readLine()) != null){
+										sb.append(str);
+										sb.append("\n");
 									}
-								}).start();
-								//Spawn new threads to execute the shoot requests to the
-								
-								try {
-									//3 this method will block the thread of latch untill its released later from thread#2
-									latch.await();
-								} catch (InterruptedException e) {
-									e.printStackTrace();
+									//content.append(inputLine);
+									in.close();
+									isr.close();
+									isi.close();
+									con_SS.disconnect();
+									System.out.println("I Completed connection to SS in a thread :"+sb.toString());
+
+									latch.countDown();
+									} catch (MalformedURLException e) {
+										e.printStackTrace();
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+									
 								}
-								
-								System.out.println("Must send response back over from here");
-								
-							//}
-					}
+							}).start();
+							//Spawn new threads to execute the shoot requests to the
+							
+							try {
+								//3 this method will block the thread of latch untill its released later from thread#2
+								latch.await();
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							
+							System.out.println("Must send response back over from here");
+							
+						//}
 				}
-				*/
+			}
+			*/
 			} catch (Exception e) {
 				// TODO: handle exception
 				System.out.println("Superserver list for client is an issue");
-				System.exit(0);
+				//System.exit(0);
 			}
 		
 			
@@ -220,24 +206,15 @@ public class ClientListener extends HttpServlet {
 			asyncCtx.setTimeout(5*60*1000);
 			
 			// Used to store information for data collection
-			try {
-				FileOutputStream fos;
-				fos = new FileOutputStream("..\\..\\..\\ServerRecords.txt");
-				ObjectOutputStream oos = new ObjectOutputStream(fos);
-				oos.writeObject("SS | Sending Request to WS | " + (System.currentTimeMillis() - startTime) +" | " + request);
-				oos.close();
-				
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 			
 			new AsyncRequestProcessor(asyncCtx, 5*60*1000,0).run();
 
 		}
 
 		
-		msg="SS,ClientListener,end,"+(System.currentTimeMillis())+","+request;
+		msg="ClientListener,doGet,end,"+(System.currentTimeMillis())+","+request;
 		appendStuff(msg,  logFile);
+		ClientRecords.add(msg);
 		
 		System.out.println("ClientListener, reqHASH,"+(System.currentTimeMillis()-startTime));
 	}
@@ -246,9 +223,27 @@ public class ClientListener extends HttpServlet {
 		//doGet(request, response);
 	}
 	
+	private void createFile(String file, ArrayList<String> arrData)
+            throws IOException {
+        FileWriter writer = new FileWriter(file + ".txt",true);
+        int size = arrData.size();
+        for (int i=0;i<size;i++) {
+            String str = arrData.get(i).toString();
+            writer.write(str);
+            if(i < size-1)
+                writer.write("\n");
+        }
+        writer.close();
+    }
+	
 	@Override
 	public void destroy() {
-	
+		try {
+			createFile(logFileLoc+"CL", this.ClientRecords);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
