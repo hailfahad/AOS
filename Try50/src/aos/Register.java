@@ -55,40 +55,45 @@ public class Register implements javax.servlet.Servlet {
 		System.out.println("Will i fail now also ");
 		
 		String[] temp_val=config.getInitParameter("superserver").split(",");
-		String loc_superserver=temp_val[1];
 		String self_address=temp_val[0];
+		int total_ss=temp_val.length-1;
 		
-		String urlWSDL="http://"+self_address+"/"+config.getServletContext().getServletContextName()+"/services/AddService?wsdl";
-		
-		System.out.println("This is the wsdl address being sent "+urlWSDL);
-		//String loc_superserver="http://127.0.0.1:8081/SuperServer/ServerListener";	
-		System.out.println("------- What is the url hit before---------- "+loc_superserver);
-		
-		loc_superserver+="?WSDL="+urlWSDL;
-		System.out.println("------- What is the url hit---------- "+loc_superserver);
-		
-		try {
-			URL url=new URL(loc_superserver);
-			HttpURLConnection urlc=(HttpURLConnection)url.openConnection();
-			urlc.setDoOutput(true);
-			urlc.setAllowUserInteraction(false);
-			urlc.setRequestMethod("GET");
-			urlc.connect();
-			if(urlc.getResponseCode()==HttpURLConnection.HTTP_OK) {
-				System.out.println("Was able to send my WSDL to SS");
-			}else {
-				System.out.println("Didnt send.. need to write a loop to try again");
+		for (int i=0;i<total_ss;i++) {
+			String loc_superserver=temp_val[i+1];
+			String urlWSDL="http://"+self_address+"/"+config.getServletContext().getServletContextName()+"/services/AddService?wsdl";
+			
+			System.out.println("This is the wsdl address being sent "+urlWSDL);
+			//String loc_superserver="http://127.0.0.1:8081/SuperServer/ServerListener";	
+			System.out.println("------- What is the url hit before---------- "+loc_superserver);
+			
+			loc_superserver+="?WSDL="+urlWSDL;
+			System.out.println("------- What is the url hit---------- "+loc_superserver);
+			
+			try {
+				URL url=new URL(loc_superserver);
+				HttpURLConnection urlc=(HttpURLConnection)url.openConnection();
+				urlc.setDoOutput(true);
+				urlc.setAllowUserInteraction(false);
+				urlc.setRequestMethod("GET");
+				urlc.connect();
+				if(urlc.getResponseCode()==HttpURLConnection.HTTP_OK) {
+					System.out.println("Was able to send my WSDL to SS");
+				}else {
+					System.out.println("Didnt send.. need to write a loop to try again");
+				}
+				
+				//PrintStream ps = new PrintStream(urlc.getOutputStream());
+				//ps.print(urlWSDL);
+				//ps.close();
+				
+				System.out.println("I have sent my stupid WSDL to Super server");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			
-			//PrintStream ps = new PrintStream(urlc.getOutputStream());
-			//ps.print(urlWSDL);
-			//ps.close();
-			
-			System.out.println("I have sent my stupid WSDL to Super server");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+				
 		}
+		
 		
 	
 	}
